@@ -11,6 +11,7 @@
 #import "MCBusinessViewController.h"
 #import "MCHomePageTableViewCell.h"
 #import "MCWebViewController.h"
+#import "ViewController.h"
 @interface MCSearchViewController ()<UISearchBarDelegate>
 @property(nonatomic, strong) NSString *searchStr;
 
@@ -64,78 +65,172 @@
         [dic setObject:@"1" forKey:@"page"];
         [dic setObject:username forKey:@"username"];
         [dic setObject:@"999" forKey:@"pagesize"];
-    }else{
         
-        urlString = @"/contacts";
-        [dic setObject:_searchStr forKey:@"keyword"];
-        [dic setObject:@"1" forKey:@"page"];
-        [dic setObject:@"999" forKey:@"pagesize"];
-        
-    }
-    [STTextHudTool showWaitText:@"卖力搜索中..."];
-    [MCHttpManager GETWithIPString:BASEURL_ROSTER urlMethod:urlString parameters:dic success:^(id responseObject) {
-        
-        [STTextHudTool hideSTHud];
-        NSDictionary *dicDictionary = responseObject;
-        
-        
-        
-        if ([[NSString stringWithFormat:@"%@",dicDictionary[@"code"]] isEqualToString:@"0"] )
-        {
-            NSArray *array = dicDictionary[@"content"][@"data"];
+        [STTextHudTool showWaitText:@"卖力搜索中..."];
+        [MCHttpManager GETWithIPString:BASEURL_ROSTER urlMethod:urlString parameters:dic success:^(id responseObject) {
             
-            if ([dicDictionary[@"content"][@"data"] isKindOfClass:[NSArray class]] && kArrayIsEmpty(array) == 0)
+            [STTextHudTool hideSTHud];
+            NSDictionary *dicDictionary = responseObject;
+            
+            
+            
+            if ([[NSString stringWithFormat:@"%@",dicDictionary[@"code"]] isEqualToString:@"0"] )
             {
+                NSArray *array = dicDictionary[@"content"][@"data"];
                 
-                
-                
-                
-                [self->listMutableArray setArray:array];
-                [self->listTableView reloadData];
-                
-                
+                if ([dicDictionary[@"content"][@"data"] isKindOfClass:[NSArray class]] && kArrayIsEmpty(array) == 0)
+                {
+                    
+                    
+                    
+                    
+                    [self->listMutableArray setArray:array];
+                    [self->listTableView reloadData];
+                    
+                    
+                    
+                    
+                }else{
+                    
+                    [STTextHudTool showErrorText:@"未找到您要搜索的内容"];
+                }
                 
                 
             }else{
                 
-                [STTextHudTool showErrorText:@"未找到您要搜索的内容"];
+                [STTextHudTool showErrorText:dicDictionary[@"message"]];
+                
+                
+                
             }
             
             
-        }else{
             
-            [STTextHudTool showErrorText:dicDictionary[@"message"]];
+        } failure:^(NSError *error) {
+            
+            [STTextHudTool hideSTHud];
+            NSLog(@"****%@", error);
+            [STTextHudTool showErrorText:@"网络不给力!"];
             
             
             
-        }
+        }];
         
+    }else{
         
+        urlString = @"/framework/getframeworkcontacts";
+        [dic setObject:_searchStr forKey:@"keyword"];
+          [STTextHudTool showWaitText:@"卖力搜索中..."];
+        [MCHttpManager GETWithIPString:BASEURL_ROSTER urlMethod:urlString parameters:dic success:^(id responseObject) {
+            [STTextHudTool hideSTHud];
+            NSDictionary *dicDictionary = responseObject;
+            
+            
+            NSLog(@"%@",dicDictionary);
+            if ([[NSString stringWithFormat:@"%@",dicDictionary[@"code"]] isEqualToString:@"0"] )
+            {
+                
+                
+                if ([dicDictionary[@"content"] isKindOfClass:[NSDictionary class]])
+                {
+                    
+                    
+                    NSArray *array1 = dicDictionary[@"content"][@"orgdata"];
+                    NSArray *array2 = dicDictionary[@"content"][@"userdata"];
+                    self.peopleArray = [NSMutableArray array];
+                    self.organizatinArray = [NSMutableArray array];
+                    
+                    if ([dicDictionary[@"content"][@"orgdata"] isKindOfClass:[NSArray class]] &&array1.count>0) {
+                        
+                        [self.organizatinArray setArray:array1];
+                        
+                    }
+                    
+                    if ([dicDictionary[@"content"][@"userdata"] isKindOfClass:[NSArray class]] &&array2.count>0) {
+                        
+                        [self.peopleArray setArray:array2];
+                    }
+                    
+                    
+                    [self->listTableView  reloadData];
+                    
+                    
+                    
+                }else{
+                    
+                    [STTextHudTool showErrorText:@"暂无数据"];
+                }
+                
+                
+            }else{
+                
+                [STTextHudTool showErrorText:dicDictionary[@"message"]];
+                
+                
+                
+            }
+            
+            
+            
+        } failure:^(NSError *error) {
+            
+            
+            NSLog(@"****%@", error);
+            [STTextHudTool showErrorText:@"网络不给力!"];
+            
+            
+            
+        }];
+       
         
-    } failure:^(NSError *error) {
-        
-        [STTextHudTool hideSTHud];
-        NSLog(@"****%@", error);
-        [STTextHudTool showErrorText:@"网络不给力!"];
-        
-        
-        
-    }];
-    
+    }
+   
     
 }
 
 - (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath;
 {
     
-
+    if ([_pushType isEqualToString:@"home"]) {
+        
+        return 68;
+    }else{
+        
+        if (indexPath.section == 0) {
+            return 60;
+        }else{
+           return 68;
+        }
+    }
     
-    return 68;
+   
 }
 - (UIView *)tableView:(UITableView *)tableView viewForHeaderInSection:(NSInteger)section {
+//
+   UILabel *label = [[UILabel alloc]initWithFrame:CGRectMake(0, 10, 200, 20)];
+   
+//    label.textColor= [UIColor blackColor];
+//    if (section==0) {
+//
+//        if (_organizatinArray.count>0) {
+//
+//
+//            label.text = @"---组织架构---";
+//        }
+//
+//    }else{
+//
+//        if (_peopleArray.count>0) {
+//
+//
+//            label.text = @"---人员---";
+//        }
+//
+//    }
+//
+//
     
-    
-    return [[UIView alloc] init];
+    return label;
 }
 -(UIView *)tableView:(UITableView *)tableView viewForFooterInSection:(NSInteger)section{
     UIView *footView = [[UIView alloc]init];
@@ -148,12 +243,30 @@
 
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView;
 {
-    return 1;
+    if ([_pushType isEqualToString:@"home"]) {
+        
+        return 1;
+    }else{
+        
+        return 2;
+    }
+    return 0;
 }
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section;
 {
-    return listMutableArray.count;
+    if ([_pushType isEqualToString:@"home"]) {
+        
+        return listMutableArray.count;
+    }else{
+        
+        if (section == 0) {
+            return self.organizatinArray.count;
+        }else{
+            return self.peopleArray.count;
+        }
+    }
+    return 0;
 }
 
 
@@ -218,20 +331,25 @@
         
     }else{
         
-        static NSString *indentifier = @"cell2";
+        NSString *indentifier = [NSString stringWithFormat:@"cell%@%@",@(indexPath.section), @(indexPath.row)];
         MCersonnelTableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:indentifier];
         if (cell == nil)
         {
             cell = [[MCersonnelTableViewCell alloc]initWithStyle:UITableViewCellStyleDefault reuseIdentifier:indentifier];
-            
         }
         
-        NSDictionary *dataDictionary =[listMutableArray  objectAtIndex:indexPath.row];
-        NSString *iconString = [NSString stringWithFormat:@"%@",dataDictionary[@"Icon"]];
-        [cell.iconImageView setImageWithURL:[NSURL URLWithString:iconString] placeholderImage:[UIImage imageNamed:@"默认头像"]];
-        [cell.nameLabel setText:[NSString stringWithFormat:@"%@",dataDictionary[@"realname"]]];
-        [cell.jibLabel setText:[NSString stringWithFormat:@"%@",dataDictionary[@"orgname"]]];
-        
+        cell.selectionStyle = UITableViewCellSelectionStyleNone;
+        if (indexPath.section == 0) {
+            
+            cell.nameLabel.text = self.organizatinArray[indexPath.row][@"name"];
+            cell.nameLabel.frame = CGRectMake(19, 24, [[UIScreen mainScreen] bounds].size.width - 130, 20);
+            cell.lineView.frame = CGRectMake(0, 67, SCREEN_WIDTH, 1);
+        }else if (indexPath.section == 1) {
+            cell.nameLabel.text = self.peopleArray[indexPath.row][@"realname"];
+            NSString *iconsting = [NSString stringWithFormat:@"%@",self.peopleArray[indexPath.row][@"icon"]];
+            [cell.iconImageView setImageWithURL:[NSURL URLWithString:iconsting] placeholderImage:[UIImage imageNamed:@"默认头像"]];
+            cell.jibLabel.text = [NSString stringWithFormat:@"%@|%@",self.peopleArray[indexPath.row][@"orgname"],self.peopleArray[indexPath.row][@"jobname"]];;
+        }
         
         return cell;
     }
@@ -247,11 +365,17 @@
     
     if (![_pushType isEqualToString:@"home"]) {
         
-        NSDictionary *dataDictionary =[listMutableArray  objectAtIndex:indexPath.row];
-        MCBusinessViewController *buVC = [MCBusinessViewController alloc];
-        buVC.dataDic = dataDictionary;
-        buVC.hidesBottomBarWhenPushed = YES;
-        [self.navigationController pushViewController:buVC animated:YES];
+        if (indexPath.section == 0) {
+            
+            [self getAddressBookData:@"TwoPageData" isTop:NO getName:self.organizatinArray[indexPath.row][@"name"] getUUid:self.organizatinArray[indexPath.row][@"uuid"]];
+            
+        }else if (indexPath.section == 1){
+            
+            MCBusinessViewController *businessVC = [[MCBusinessViewController alloc]init];
+            businessVC.dataDic = self.peopleArray[indexPath.row];
+            [self.navigationController pushViewController:businessVC animated:YES];
+            
+        }
         
     }else{
         
@@ -282,6 +406,26 @@
     
 }
 
+
+
+- (void)getAddressBookData:(NSString *)str isTop:(BOOL )top getName:(NSString *)name  getUUid:(NSString *)uuid{
+    
+    
+    if (top) {
+        
+        
+        
+    }else {
+        
+        
+        ViewController *vc = [[ViewController alloc]init];
+        
+        vc.title = name;
+        vc.isHomePage = NO;
+        vc.organizatinUUID = uuid;
+        [self.navigationController pushViewController:vc animated:YES];
+    }
+}
 #pragma mark-键盘关闭
 - (UIView*)customView {
     if (!_customView) {
@@ -313,7 +457,7 @@
     
     searchBar.frame=CGRectMake(0, 40, SCREEN_WIDTH, 44);
     searchBar.keyboardType = UIKeyboardTypeWebSearch;
-    searchBar.placeholder = @"搜索";
+    searchBar.placeholder = @"可输入组织架构名/岗位名/人员名查询相关数据";
     searchBar.delegate = self;
     [searchBar becomeFirstResponder];
     

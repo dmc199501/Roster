@@ -26,23 +26,23 @@
         
         
         _netButton = [[UIButton alloc]init];
-        self.netButton.frame = CGRectMake(SCREEN_WIDTH*0.8-100, 0, 100, 68);
+        self.netButton.frame = CGRectMake(SCREEN_WIDTH*0.7-100, 0, 100, 68);
         [self addSubview:_netButton];
         [_netButton setBackgroundColor:[UIColor clearColor]];
         [_netButton addTarget:self action:@selector(nextView:) forControlEvents:UIControlEventTouchUpInside];
         
         _fxImageView = [[UIImageView alloc]init];
-        self.fxImageView.frame = CGRectMake(SCREEN_WIDTH*0.8 -70, 26.5, 8, 15);
+        self.fxImageView.frame = CGRectMake(SCREEN_WIDTH*0.7 -70, 26.5, 8, 15);
         [_fxImageView setImage:[UIImage imageNamed:@"更多"]];
         [_fxImageView setBackgroundColor:[UIColor clearColor]];
         [self addSubview:_fxImageView];
         
        
-        UIView *line = [[UIView alloc]initWithFrame:CGRectMake(SCREEN_WIDTH*0.8-99, 14, 1, 40)];
+        UIView *line = [[UIView alloc]initWithFrame:CGRectMake(SCREEN_WIDTH*0.7-99, 14, 1, 40)];
         [self addSubview:line];
         line.backgroundColor = COLOR_LINE_MC;
         
-       UIView *line2 = [[UIView alloc]initWithFrame:CGRectMake(0, 1, SCREEN_WIDTH*0.8, 1)];
+       UIView *line2 = [[UIView alloc]initWithFrame:CGRectMake(0, 1, SCREEN_WIDTH*0.7, 1)];
         [self addSubview:line2];
         line2.backgroundColor =  COLOR_LINE_MC;
         

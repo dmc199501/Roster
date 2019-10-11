@@ -16,6 +16,8 @@ NS_ASSUME_NONNULL_BEGIN
     NSMutableArray *listMutableArray;
     UITableView *listTableView;
 }
+@property (nonatomic,strong) NSMutableArray *peopleArray;//缓存人员信息数
+@property (nonatomic,strong) NSMutableArray *organizatinArray;//缓存组织信息数组
 @property (nonatomic ,strong)UIView *customView;
 @property (nonatomic ,strong)NSString *pushType;
 @end

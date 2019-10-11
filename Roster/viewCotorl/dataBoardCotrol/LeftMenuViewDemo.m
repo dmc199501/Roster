@@ -38,6 +38,8 @@
 
 -(void)initView{
 
+   
+
      self.backgroundColor = [UIColor whiteColor];
     UIView *bgView = [[UIView alloc]initWithFrame:CGRectMake(0, 0, SCREEN_WIDTH, 100)];
     bgView.backgroundColor = [UIColor whiteColor];
@@ -71,6 +73,7 @@
     
     [self getOrgData];
 }
+
 
 -(void)pushData{
     
@@ -237,10 +240,10 @@
     
     [cell.fxImageView setImage:[UIImage imageNamed:str1]];
     if ([str1 isEqualToString:@"更多下"]) {
-        cell.fxImageView.frame = CGRectMake(SCREEN_WIDTH*0.8 -75, 30, 15, 8);
+        cell.fxImageView.frame = CGRectMake(SCREEN_WIDTH*0.7 -75, 30, 15, 8);
     }else{
         
-        cell.fxImageView.frame = CGRectMake(SCREEN_WIDTH*0.8 -70, 26.5, 8, 15);
+        cell.fxImageView.frame = CGRectMake(SCREEN_WIDTH*0.7 -70, 26.5, 8, 15);
     }
     // cell.textLabel.text = [(model.haveSubLevel ? str1 : @"") stringByAppendingString:model.title];
     //    cell.detailTextLabel.text = [NSString stringWithFormat:@"第 %ld 级", model.level];

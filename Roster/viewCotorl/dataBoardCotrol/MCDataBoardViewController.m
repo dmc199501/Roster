@@ -32,9 +32,13 @@
 @property(nonatomic,strong)NSString *orgName;
 @property(nonatomic,strong)NSString *outhTonken;
 @property (nonatomic ,strong)MenuView   * menu;
+@property(nonatomic,assign)int page;
+
+@property (nonatomic, strong) UISwipeGestureRecognizer *leftSwipeGestureRecognizer;
+
+@property (nonatomic, strong) UISwipeGestureRecognizer *rightSwipeGestureRecognizer;
 
 @end
-
 @implementation MCDataBoardViewController
 - (id)init
 {
@@ -49,8 +53,26 @@
     }
     return  self;
 }
+
 - (void)viewDidLoad {
     [super viewDidLoad];
+    
+    // 屏幕旋转通知
+    [[UIDevice currentDevice] beginGeneratingDeviceOrientationNotifications];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(deviceOrientationDidChange:)
+                                                 name:UIDeviceOrientationDidChangeNotification object:nil];
+    _page = 0;
+    self.leftSwipeGestureRecognizer = [[UISwipeGestureRecognizer alloc] initWithTarget:self action:@selector(handleSwipes:)];
+    
+    self.rightSwipeGestureRecognizer = [[UISwipeGestureRecognizer alloc] initWithTarget:self action:@selector(handleSwipes:)];
+    
+    self.leftSwipeGestureRecognizer.direction = UISwipeGestureRecognizerDirectionLeft;
+    
+    self.rightSwipeGestureRecognizer.direction = UISwipeGestureRecognizerDirectionRight;
+    
+    [self.view addGestureRecognizer:self.leftSwipeGestureRecognizer];
+    
+    [self.view addGestureRecognizer:self.rightSwipeGestureRecognizer];
   
     LeftMenuViewDemo *demo = [[LeftMenuViewDemo alloc]initWithFrame:CGRectMake(0, 0, [[UIScreen mainScreen] bounds].size.width * 0.7, [[UIScreen mainScreen] bounds].size.height)];
     demo.customDelegate = self;
@@ -62,7 +84,33 @@
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(receiveNotification:) name:@"infoNotification" object:nil];
     
     
-   self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc]initWithImage:[UIImage imageNamed:@"看板-更多"] style:UIBarButtonItemStylePlain target:self action:@selector(screening)];
+   
+
+    UIButton *button = [[UIButton alloc]init];
+    button.frame = CGRectMake(0, 0, 80, 29);
+    [button setImage :[UIImage imageNamed:@"看板-更多"] forState:UIControlStateNormal];
+    [button setTitle:@"类目" forState:UIControlStateNormal];
+    button.titleEdgeInsets = UIEdgeInsetsMake(0, 10, 0, 0);
+    [button setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
+    [button.titleLabel setFont:[UIFont systemFontOfSize:16]];
+    [button addTarget:self action:@selector(screening) forControlEvents:UIControlEventTouchUpInside];
+    self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc]initWithCustomView:button];
+    
+    UIButton *button1 = [[UIButton alloc]init];
+    button1.frame = CGRectMake(0, 0, 60, 21);
+    [button1 setImage:[UIImage imageNamed:@"看板-向左滑"] forState:UIControlStateNormal];
+    button1.titleEdgeInsets = UIEdgeInsetsMake(0, 10, 0, 0);
+    [button1 setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
+    [button1.titleLabel setFont:[UIFont systemFontOfSize:16]];
+    [button1 setTitle:@"架构" forState:UIControlStateNormal];
+    [button1 addTarget:self action:@selector(LeftMenu) forControlEvents:UIControlEventTouchUpInside];
+    self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc]initWithCustomView:button1];
+    
+//    self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc]initWithImage:[UIImage imageNamed:@"看板-更多"] style:UIBarButtonItemStylePlain target:self action:@selector(screening)];
+   //  self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc]initWithImage:[UIImage imageNamed:@"看板-向左滑"] style:UIBarButtonItemStylePlain target:self action:@selector(screening)];
+    //[self.navigationItem.rightBarButtonItem setTintColor:[UIColor colorWithRed:51 / 255.0 green:150 / 255.0 blue:251 / 255.0 alpha:1]];
+   
+//   self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc]initWithImage:[UIImage imageNamed:@"看板-更多"] style:UIBarButtonItemStylePlain target:self action:@selector(screening)];
     
     _orgName = @"全集团";
     [self setUI];
@@ -73,6 +121,190 @@
    
     // Do any additional setup after loading the view.
 }
+
+//切屏重新设置frame
+- (void)deviceOrientationDidChange:(UIInterfaceOrientation)interfaceOrientation
+{
+  
+    
+    [self.menu hidenWithAnimation];
+    
+    LeftMenuViewDemo *demo = [[LeftMenuViewDemo alloc]initWithFrame:CGRectMake(0, 0, [[UIScreen mainScreen] bounds].size.width * 0.7, [[UIScreen mainScreen] bounds].size.height)];
+    demo.customDelegate = self;
+    
+    self.menu = [[MenuView alloc]initWithDependencyView:self.view MenuView:demo isShowCoverView:YES];
+    float heights = getRectNavAndStatusHight+getTabBarHight;
+    float heightt = SCREEN_HEIGHT -heights;
+    _kfLabel.frame =CGRectMake((SCREEN_WIDTH-250)/2, 11, 250, 20);
+    yearsButoon.frame =CGRectMake(10, BOTTOM_Y(_kfLabel)+3, 70, 20);
+     monthButoon.frame =CGRectMake(80, BOTTOM_Y(_kfLabel)+3, 50, 20);
+    lineV.frame = CGRectMake(130, BOTTOM_Y(_kfLabel)+3, 0.5, 20);
+    self.class1ScrollView.frame = CGRectMake(140, BOTTOM_Y(_kfLabel)+3, 100, 20);
+    webbackView.frame =CGRectMake((SCREEN_WIDTH-200)/2, BOTTOM_Y(_kfLabel)+60+150, 200, 100);
+    formButoon.frame = CGRectMake(SCREEN_WIDTH-80, BOTTOM_Y(_kfLabel)+3, 60, 21);
+     web.frame = CGRectMake(0, BOTTOM_Y(_kfLabel)+40, SCREEN_WIDTH,heightt-BOTTOM_Y(_kfLabel)-40);
+    barButoon.frame= CGRectMake(SCREEN_WIDTH-120, BOTTOM_Y(_kfLabel)+3, 60, 21);
+  
+    
+}
+//移除通知
+- (void)dealloc
+{
+    [[NSNotificationCenter defaultCenter] removeObserver:self];
+    
+}
+
+- (void)handleSwipes:(UISwipeGestureRecognizer *)sender
+
+{
+    
+    
+    if (sender.direction == UISwipeGestureRecognizerDirectionLeft) {
+        
+      
+        if (_page == 4) {
+            [STTextHudTool showErrorText:@"已经是最后一项" withSecond:1];
+        }else{
+            
+            _page +=1;
+            [self changgeURLTag:_page];
+        }
+        
+        //添加要响应的方法
+       
+    }
+    
+    if (sender.direction == UISwipeGestureRecognizerDirectionRight) {
+       
+        if (_page == 0) {
+            
+            [STTextHudTool showErrorText:@"这是第一项" withSecond:1];
+        }else{
+            
+            _page -=1;
+            [self changgeURLTag:_page];
+        }
+        //添加要响应的方法
+        
+    }
+    
+}
+
+-(void)zyChanggeURL:(UIButton *)button{
+    
+    if (button.tag == 889) {
+        
+        
+        if (_page == 4) {
+            [STTextHudTool showErrorText:@"已经是最后一项" withSecond:1];
+        }else{
+            
+            _page +=1;
+            [self changgeURLTag:_page];
+        }
+        
+        //添加要响应的方法
+        
+    }else{
+        
+        if (_page == 0) {
+            
+            [STTextHudTool showErrorText:@"这是第一项" withSecond:1];
+        }else{
+            
+            _page -=1;
+            [self changgeURLTag:_page];
+        }
+        //添加要响应的方法
+        
+    }
+}
+#pragma -mark切换url
+-(void)changgeURLTag:(int)tag{
+    
+   
+    
+   
+   
+    switch (tag) {
+        case 0:
+        {
+            self.kfLabel.text =[NSString stringWithFormat:@"%@%@报表",_orgName,@"人员数量"] ;
+            [self.navigationController.navigationBar addSubview: self.kfLabel];
+            if ([self.table isEqualToString:@"kpiTable"]) {
+                self->_jgName = @"rysltab";
+            }else{
+                
+                self->_jgName = @"ryslzxt";
+            }
+            
+            [self loadWebURl];
+        }
+            break;
+        case 1:
+        {
+            self.kfLabel.text =[NSString stringWithFormat:@"%@%@报表",_orgName,@"入离职"] ;
+            [self.navigationController.navigationBar addSubview: self.kfLabel];
+            if ([self.table isEqualToString:@"kpiTable"]) {
+                self->_jgName = @"rlztab";
+            }else{
+                
+                self->_jgName = @"rlzzxt";
+            }
+            
+            [self loadWebURl];
+        }
+            break;
+            
+            break; case 2:
+        {
+            self.kfLabel.text =[NSString stringWithFormat:@"%@%@报表",_orgName,@"人力成本"] ;
+            [self.navigationController.navigationBar addSubview: self.kfLabel];
+            if ([self.table isEqualToString:@"kpiTable"]) {
+                self->_jgName = @"rlcbtab";
+            }else{
+                
+                self->_jgName = @"rlcbbt";
+            }
+            
+            [self loadWebURl];
+        }
+            break; case 3:
+        {
+            self.kfLabel.text =[NSString stringWithFormat:@"%@%@报表",_orgName,@"人力效能"] ;
+            [self.navigationController.navigationBar addSubview: self.kfLabel];
+            if ([self.table isEqualToString:@"kpiTable"]) {
+                self->_jgName = @"rlxntab";
+            }else{
+                
+                self->_jgName = @"rlxnzxt";
+            }
+            
+            [self loadWebURl];
+        }
+            break; case 4:
+        {
+            self.kfLabel.text =[NSString stringWithFormat:@"%@%@报表",_orgName,@"经营数据"] ;
+            [self.navigationController.navigationBar addSubview: self.kfLabel];
+            if ([self.table isEqualToString:@"kpiTable"]) {
+                self->_jgName = @"jysjtab";
+            }else{
+                
+                self->_jgName = @"jysjzxt";
+            }
+            
+            [self loadWebURl];
+        }
+            
+            break;
+            
+        default:
+            break;
+    }
+    
+    
+    
+}
 - (void)webViewDidFinishLoad:(UIWebView *)webView{
     
    
@@ -82,20 +314,23 @@
 
 -(void)setUI{
     
-    _kfLabel = [[UILabel alloc]initWithFrame:CGRectMake(0, 20, SCREEN_WIDTH, 20)];
-    _kfLabel.text = @"全集团人员编制报表";
+    [_kfLabel removeFromSuperview];
+    _kfLabel = [[UILabel alloc]initWithFrame:CGRectMake((SCREEN_WIDTH-250)/2, 11, 250, 20)];
+    _kfLabel.text = @"全集团人员数量报表";
     _kfLabel.font = [UIFont systemFontOfSize:18];
     _kfLabel.textColor = [UIColor blackColor];
     _kfLabel.textAlignment = NSTextAlignmentCenter;
-    [self.view addSubview:_kfLabel];
+   // [self.view addSubview:_kfLabel];
+    [self.navigationController.navigationBar addSubview:_kfLabel];
     
-    sxArray =@[@"人员编制",@"人力成本",@"人力效能",@"成本结构",@"入离职",@"职级结构",@"年龄结构",@"司龄结构",@"工龄结构",@"收入结构",@"薪酬变动",@"职级变动"];
+    //sxArray =@[@"人员编制",@"人力成本",@"人力效能(营收)",@"人力效能(利润)",@"成本结构",@"职级结构",@"学历结构",@"年龄结构",@"司龄结构",@"工龄结构",@"收入结构",@"薪酬变动",@"职级变动",@"入离职"];
+    sxArray =@[@"人员数量",@"入离职",@"人力成本",@"人力效能",@"经营数据"];
     
     
     view = [[kpengHorizontalView alloc]initWithFrame:CGRectMake(0, 0, self.view.frame.size.width-60, 40) andTitle:sxArray];
     __weak __typeof(self) weakSelf = self;
     
-    [self.navigationController.navigationBar addSubview:view];
+    //[self.navigationController.navigationBar addSubview:view];
     view.itemClickCallBack = ^(NSInteger itemIndex, NSString *title,float buttonx) {
        // NSLog(@"%ld---%@",itemIndex,title);
         weakSelf.kfLabel.text = [NSString stringWithFormat:@"%@%@报表",weakSelf.orgName,title];
@@ -112,51 +347,53 @@
                 [weakSelf loadWebURl];
             }
                 break;
-            case 2:
+           
+                case 2:
             {
-                self->_jgName = @"rlxn";
+               self->_jgName = @"rlxnys";
                 [weakSelf loadWebURl];
             }
-                break; case 3:
+            case 3:
             {
-               self->_jgName = @"cbjg";
+                self->_jgName = @"rlxnlr";
                 [weakSelf loadWebURl];
             }
                 break; case 4:
             {
-                self->_jgName = @"zjjg";
+                self->_jgName = @"cbjg";
                 [weakSelf loadWebURl];
             }
                 break; case 5:
             {
-                self->_jgName = @"xljg";
+                self->_jgName = @"zjjg";
                 [weakSelf loadWebURl];
             }
                 break; case 6:
             {
-               self->_jgName = @"nljg";
+                self->_jgName = @"xljg";
                 [weakSelf loadWebURl];
             }
                 break; case 7:
             {
-                self->_jgName = @"sljg";
+               self->_jgName = @"nljg";
                 [weakSelf loadWebURl];
             }
                 break; case 8:
             {
-                self->_jgName = @"gljg";
+                self->_jgName = @"sljg";
                 [weakSelf loadWebURl];
             }
                 break; case 9:
             {
-                self->_jgName = @"srjg-month";
+                self->_jgName = @"gljg";
                 [weakSelf loadWebURl];
             }
                 break; case 10:
             {
-                self->_jgName = @"srjg-year";
+                self->_jgName = @"srjg-month";
                 [weakSelf loadWebURl];
             }
+            
                 break; case 11:
             {
                 self->_jgName = @"xcbd";
@@ -168,6 +405,13 @@
                 [weakSelf loadWebURl];
             }
                 break;
+                break; case 13:
+            {
+                self->_jgName = @"rlz";
+                [weakSelf loadWebURl];
+            }
+                break;
+                
            
                 
             default:
@@ -196,11 +440,13 @@
     //标题下方布局
     //(1).左侧菜单栏按钮
     
-    UIButton *button = [[UIButton alloc]initWithFrame:CGRectMake(10, BOTTOM_Y(_kfLabel)+25, 15, 15)];
-    [self.view addSubview:button];
+    UIButton *button = [[UIButton alloc]initWithFrame:CGRectMake(10, BOTTOM_Y(_kfLabel)+5, 40, 15)];
+    //[self.view addSubview:button];
     button.tag = 9999999999;
     button.backgroundColor = [UIColor clearColor];
-    [button setBackgroundImage:[UIImage imageNamed:@"看板-向左滑"] forState:UIControlStateNormal];
+   // [button setBackgroundImage:[UIImage imageNamed:@"看板-向左滑"] forState:UIControlStateNormal];
+    [button setTitle:@"架构" forState:UIControlStateNormal];
+    [button setTitleColor:COLOR_56_COLOER forState:UIControlStateNormal];
     [button addTarget:self action:@selector(LeftMenu) forControlEvents:UIControlEventTouchUpInside];
     
     //(2)年选择button
@@ -224,7 +470,7 @@
     month = month1 -1;
     }
    
-    yearsButoon = [[UIButton alloc]initWithFrame:CGRectMake(35, BOTTOM_Y(_kfLabel)+23, 70, 20)];
+    yearsButoon = [[UIButton alloc]initWithFrame:CGRectMake(10, BOTTOM_Y(_kfLabel)+3, 70, 20)];
     [yearsButoon setTitle:[NSString stringWithFormat:@"%ld年",year] forState:UIControlStateNormal];
     [self.view addSubview:yearsButoon];
     //[yearsButoon setBackgroundColor:[UIColor yellowColor]];
@@ -233,7 +479,7 @@
     yearsButoon.tag = 2999;
     [yearsButoon addTarget:self action:@selector(changgeYears:) forControlEvents:UIControlEventTouchUpInside];
     
-    monthButoon = [[UIButton alloc]initWithFrame:CGRectMake(105, BOTTOM_Y(_kfLabel)+23, 50, 20)];
+    monthButoon = [[UIButton alloc]initWithFrame:CGRectMake(80, BOTTOM_Y(_kfLabel)+3, 50, 20)];
     [monthButoon setTitle:[NSString stringWithFormat:@"%ld月",month] forState:UIControlStateNormal];
     [self.view addSubview:monthButoon];
     [monthButoon.titleLabel setTextAlignment:NSTextAlignmentLeft];
@@ -242,39 +488,54 @@
     [monthButoon setTitleColor:COLOR_56_COLOER forState:UIControlStateNormal];
     [monthButoon addTarget:self action:@selector(changgeMoth:) forControlEvents:UIControlEventTouchUpInside];
     
-    UIView *lineV = [[UIView alloc]initWithFrame:CGRectMake(155, BOTTOM_Y(_kfLabel)+23, 0.5, 20)];
+    lineV = [[UIView alloc]initWithFrame:CGRectMake(130, BOTTOM_Y(_kfLabel)+3, 0.5, 20)];
     [self.view addSubview:lineV];
     lineV.backgroundColor = [UIColor colorWithRed:120 / 255.0 green:120 / 255.0 blue:120 / 255.0 alpha:1];
     
     //（3）当月累计按钮布局
-    self.class1ScrollView = [[UIScrollView alloc]initWithFrame:CGRectMake(165, BOTTOM_Y(_kfLabel)+23, 100, 20)];
+    
+    self.class1ScrollView = [[UIScrollView alloc]initWithFrame:CGRectMake(140, BOTTOM_Y(_kfLabel)+3, 100, 20)];
     self.class1ScrollView.backgroundColor = [UIColor clearColor];
     self.class1ScrollView.showsHorizontalScrollIndicator = NO;
     [self.view addSubview: self.class1ScrollView];
     [self createButtonWithArray];
     
     //(4)表格 条形图切换布局
-    formButoon = [[UIButton alloc]initWithFrame:CGRectMake(SCREEN_WIDTH-35, BOTTOM_Y(_kfLabel)+21.5, 25, 25)];
+    formButoon = [[UIButton alloc]initWithFrame:CGRectMake(SCREEN_WIDTH-80, BOTTOM_Y(_kfLabel)+3, 60, 21)];
     [self.view addSubview:formButoon];
-    [formButoon setImage:[UIImage imageNamed:@"看板-列表"] forState:UIControlStateNormal];
+    
+
+    formButoon.titleEdgeInsets = UIEdgeInsetsMake(0, 10, 0, 0);
+    [formButoon setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
+    [formButoon.titleLabel setFont:[UIFont systemFontOfSize:16]];
+    [formButoon setTitle:@"表" forState:UIControlStateNormal];
+    [formButoon setImage:[UIImage imageNamed:@"看板-表"] forState:UIControlStateNormal];
+    [formButoon setTitleColor:COLOR_56_COLOER forState:UIControlStateNormal];
+    
     [formButoon addTarget:self action:@selector(qhBar:) forControlEvents:UIControlEventTouchUpInside];
     formButoon.tag = 1999;
     
-    barButoon = [[UIButton alloc]initWithFrame:CGRectMake(SCREEN_WIDTH-70, BOTTOM_Y(_kfLabel)+21.5, 25, 25)];
+    barButoon = [[UIButton alloc]initWithFrame:CGRectMake(SCREEN_WIDTH-120, BOTTOM_Y(_kfLabel)+3, 60, 21)];
     barButoon.tag = 1998;
+    barButoon.titleEdgeInsets = UIEdgeInsetsMake(0, 10, 0, 0);
+    [barButoon setTitle:@"图" forState:UIControlStateNormal];
+     barButoon.titleLabel.font  = [UIFont systemFontOfSize: 16.0];
+    [barButoon setTitleColor:[UIColor colorWithRed:51 / 255.0 green:150 / 255.0 blue:251 / 255.0 alpha:1] forState:UIControlStateNormal];
     [self.view addSubview:barButoon];
-    [barButoon setImage:[UIImage imageNamed:@"看板-图像-active"] forState:UIControlStateNormal];
+    [barButoon setImage:[UIImage imageNamed:@"看板-图-active"] forState:UIControlStateNormal];
     [barButoon addTarget:self action:@selector(qhBar:) forControlEvents:UIControlEventTouchUpInside];
     
     
     _table = @"kpiGraph";
-    _jgName = @"rybz";
+    _jgName = @"ryslzxt";
     _orgUuid = @"";
     _year = [NSString stringWithFormat:@"%ld",(long)year];
     _moth = [NSString stringWithFormat:@"%ld",(long)month];
     _type = @"0";
 
     _urlStirng = [NSString stringWithFormat:@"http://139.9.32.247:40091/#/%@/%@?orguuid=%@&year=%@&month=%@&type=%@",_table,_jgName,_orgUuid,_year,_moth,_type];
+    
+    NSLog(@"%@",_urlStirng);
     
    // NSString *urlString = @"http://192.168.2.175:8080/#/kpiGraph/rybz?year=2018&month=1&type=0";
     // 在 url 中,不能出现汉字,只能是 ASCII 吗! 如果 url 中出现了 汉字等特殊符号,必须使用百分号转译!
@@ -290,15 +551,29 @@
    
     float heights = getRectNavAndStatusHight+getTabBarHight;
     float heightt = SCREEN_HEIGHT -heights;
-    web = [[UIWebView alloc] initWithFrame:CGRectMake(0, BOTTOM_Y(_kfLabel)+60, SCREEN_WIDTH,heightt-BOTTOM_Y(_kfLabel)-60)];
+    web = [[UIWebView alloc] initWithFrame:CGRectMake(0, BOTTOM_Y(_kfLabel)+40, SCREEN_WIDTH,heightt-BOTTOM_Y(_kfLabel)-40)];
     [web loadRequest:request];
     web.delegate = self;
     web.backgroundColor = [UIColor clearColor];
     web.opaque = NO;
     [self.view addSubview:web];
     
+    
     webbackView = [[UIView alloc]initWithFrame:CGRectMake((SCREEN_WIDTH-200)/2, BOTTOM_Y(_kfLabel)+60+150, 200, 100)];
     [self.view addSubview:webbackView];
+    
+    
+    UIButton *zButton = [[UIButton alloc]initWithFrame:CGRectMake(0, BOTTOM_Y(_kfLabel)+60+150, 50, 200)];
+    [self.view addSubview:zButton];
+    [zButton setImage:[UIImage imageNamed:@"left-circle-fill"] forState:UIControlStateNormal];
+    zButton.tag = 888;
+    [zButton addTarget:self action:@selector(zyChanggeURL:) forControlEvents:UIControlEventTouchUpInside];
+    
+    UIButton *yButton = [[UIButton alloc]initWithFrame:CGRectMake(SCREEN_WIDTH-50, BOTTOM_Y(_kfLabel)+60+150, 50, 200)];
+    [self.view addSubview:yButton];
+    [yButton setImage:[UIImage imageNamed:@"right-circle-fill"] forState:UIControlStateNormal];
+    yButton.tag = 889;
+    [yButton addTarget:self action:@selector(zyChanggeURL:) forControlEvents:UIControlEventTouchUpInside];
     
     backImageView = [[UIImageView alloc]initWithFrame:CGRectMake(70, 10, 45, 45)];
     [webbackView addSubview:backImageView];
@@ -406,7 +681,7 @@
     
     
     self.urlStirng = [NSString stringWithFormat:@"http://139.9.32.247:40091/#/%@/%@?orguuid=%@&year=%@&month=%@&type=%@",self.table,self.jgName,_orgUuid,self.year,self.moth,self.type];
-    
+     NSLog(@"---%@", self.urlStirng);
     if ([self.urlStirng containsString:@"月"]) {
         
         NSString *str2 = [self.urlStirng stringByReplacingOccurrencesOfString:@"月" withString:@""];
@@ -456,15 +731,46 @@
 -(void)qhBar:(UIButton *)button{
     
     if (button.tag == 1999) {
-        [formButoon setImage:[UIImage imageNamed:@"看板-列表-active"] forState:UIControlStateNormal];
-        [barButoon setImage:[UIImage imageNamed:@"看板-图像"] forState:UIControlStateNormal];
+     
+        
+        [formButoon setImage:[UIImage imageNamed:@"看板-表-active"] forState:UIControlStateNormal];
+        [barButoon setImage:[UIImage imageNamed:@"看板-图"] forState:UIControlStateNormal];
+        [formButoon setTitleColor:[UIColor colorWithRed:51 / 255.0 green:150 / 255.0 blue:251 / 255.0 alpha:1] forState:UIControlStateNormal];
+        [barButoon setTitleColor:[UIColor colorWithRed:51 / 255.0 green:51 / 255.0 blue:51 / 255.0 alpha:1] forState:UIControlStateNormal];
+        
         self.table = @"kpiTable";
+        if ([self.jgName containsString:@"zxt"]) {
+            
+            NSString *strUrl = [self.jgName stringByReplacingOccurrencesOfString:@"zxt" withString:@"tab"];
+            self.jgName = strUrl;
+        }else{
+           
+            NSString *strUrl = [self.jgName stringByReplacingOccurrencesOfString:@"bt" withString:@"tab"];
+            self.jgName = strUrl;
+        }
+       
         [self loadWebURl];
     }else{
+        [formButoon setImage:[UIImage imageNamed:@"看板-表"] forState:UIControlStateNormal];
+        [barButoon setImage:[UIImage imageNamed:@"看板-图-active"] forState:UIControlStateNormal];
+        [barButoon setTitleColor:[UIColor colorWithRed:51 / 255.0 green:150 / 255.0 blue:251 / 255.0 alpha:1] forState:UIControlStateNormal];
+        [formButoon setTitleColor:[UIColor colorWithRed:51 / 255.0 green:51 / 255.0 blue:51 / 255.0 alpha:1] forState:UIControlStateNormal];
         
-        [formButoon setImage:[UIImage imageNamed:@"看板-列表"] forState:UIControlStateNormal];
-        [barButoon setImage:[UIImage imageNamed:@"看板-图像-active"] forState:UIControlStateNormal];
         self.table = @"kpiGraph";
+        if ([self.jgName containsString:@"tab"]) {
+            if ([self.jgName isEqualToString:@"rlcbtab"]) {
+                NSString *strUrl = [self.jgName stringByReplacingOccurrencesOfString:@"tab" withString:@"bt"];
+                self.jgName = strUrl;
+            }else{
+                NSString *strUrl = [self.jgName stringByReplacingOccurrencesOfString:@"tab" withString:@"zxt"];
+                self.jgName = strUrl;
+            }
+          
+        }else{
+            
+           
+        }
+        
         [self loadWebURl];
        
     }
@@ -473,6 +779,7 @@
 
 #pragma -mark左菜单点击传值
 -(void)receiveNotification:(NSNotification *)infoNotification {
+    
     NSDictionary *dic = [infoNotification userInfo];
     NSString *nameStr = [dic objectForKey:@"orginfo"][@"name"];
     NSString *uuidStr = [dic objectForKey:@"orginfo"][@"orguuid"];
@@ -482,6 +789,7 @@
     _orgName = [NSString stringWithFormat:@"%@",nameStr];
     _orgUuid = [NSString stringWithFormat:@"%@",uuidStr];
     _kfLabel.text =[NSString stringWithFormat:@"%@",titleString];
+    [self.navigationController.navigationBar addSubview:_kfLabel];
     [self loadWebURl];
     
 }
@@ -489,7 +797,9 @@
 
 #pragma -mark移除监听
 - (void)didReceiveMemoryWarning {
+  
     [super didReceiveMemoryWarning];
+    
     [[NSNotificationCenter defaultCenter] removeObserver:self];
 }
 
@@ -589,13 +899,23 @@
     //遮罩
     backView = [[UIView alloc]initWithFrame:CGRectMake(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT)];
     backView.backgroundColor =[UIColor colorWithRed:0 / 255.0 green:0 / 255.0 blue:0/ 255.0 alpha:0.1];
+    backView.userInteractionEnabled = YES;
    [[UIApplication sharedApplication].keyWindow addSubview:backView];
+    
+    
+    //遮罩按钮
+    UIButton *zzButton = [[UIButton alloc]initWithFrame:CGRectMake(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT)];
+    [backView addSubview:zzButton];
+    [zzButton setBackgroundColor:[UIColor clearColor]];
+    [zzButton addTarget:self action:@selector(canOder) forControlEvents:UIControlEventTouchUpInside];
     //数据选择
+    
+    
    
-    oderView = [[UIView alloc]initWithFrame:CGRectMake(0, 1000, SCREEN_WIDTH, SCREEN_HEIGHT)];
+    oderView = [[UIView alloc]initWithFrame:CGRectMake(0, 1000, SCREEN_WIDTH, SCREEN_HEIGHT/2)];
     oderView.backgroundColor = [UIColor whiteColor];
     
-    UIBezierPath *maskPath = [UIBezierPath bezierPathWithRoundedRect:oderView.bounds byRoundingCorners:UIRectCornerTopLeft | UIRectCornerTopRight cornerRadii:CGSizeMake(20,20)];
+    UIBezierPath *maskPath = [UIBezierPath bezierPathWithRoundedRect:oderView.bounds byRoundingCorners:UIRectCornerTopLeft | UIRectCornerTopRight|UIRectCornerBottomLeft|UIRectCornerBottomRight cornerRadii:CGSizeMake(20,20)];
     //创建 layer
     CAShapeLayer *maskLayer = [[CAShapeLayer alloc] init];
     maskLayer.frame = oderView.bounds;
@@ -608,10 +928,10 @@
         
         // 设置view弹出来的位置
         if (getRectNavAndStatusHight == 88) {
-             self->oderView.frame = CGRectMake(0, 44, SCREEN_WIDTH, SCREEN_HEIGHT-44);
+             self->oderView.frame = CGRectMake(0, 44, SCREEN_WIDTH, SCREEN_HEIGHT/2);
         }else{
             
-             self->oderView.frame = CGRectMake(0, 20, SCREEN_WIDTH, SCREEN_HEIGHT-20);
+             self->oderView.frame = CGRectMake(0, 20, SCREEN_WIDTH, SCREEN_HEIGHT/2);
         }
        
         
@@ -649,7 +969,9 @@
     for (int i = 0; i < sxArray.count; i++)
     {
          UIButton *TtypeButton = [UIButton buttonWithType:UIButtonTypeCustom];
-       TtypeButton.frame= CGRectMake((i % 3) * (20+ (SCREEN_WIDTH-20*4)/3)+20,(i / 3)*(60) +60,(SCREEN_WIDTH-20*4)/3, 40*SCREEN_WIDTH/375);
+       TtypeButton.frame= CGRectMake((i % 3) * (20+ (SCREEN_WIDTH-20*4)/3)+20,(i / 3)*(50*SCREEN_WIDTH/375) +60,(SCREEN_WIDTH-20*4)/3, 40*SCREEN_WIDTH/375);
+        
+       
         [oderView addSubview:TtypeButton];
         TtypeButton.backgroundColor =[UIColor colorWithRed:245 / 255.0 green:245 / 255.0 blue:245 / 255.0 alpha:1];
         
@@ -687,98 +1009,178 @@
     [backView removeFromSuperview];
     [oderView removeFromSuperview];
     
-    self.kfLabel.text =[NSString stringWithFormat:@"集团%@报表",button.titleLabel.text] ;
+    self.kfLabel.text =[NSString stringWithFormat:@"%@%@报表",_orgName,button.titleLabel.text] ;
+    [self.navigationController.navigationBar addSubview: self.kfLabel];
     view.localIndex= button.tag;
     switch (button.tag) {
         case 0:
         {
-            self->_jgName = @"rybz";
+            _page = 0;
+            if ([self.table isEqualToString:@"kpiTable"]) {
+                 self->_jgName = @"rysltab";
+            }else{
+                
+                 self->_jgName = @"ryslzxt";
+            }
+           
             [self loadWebURl];
         }
             break;
         case 1:
-        {
-            self->_jgName = @"rlcb";
+        { _page = 1;
+            if ([self.table isEqualToString:@"kpiTable"]) {
+                self->_jgName = @"rlztab";
+            }else{
+                
+                self->_jgName = @"rlzzxt";
+            }
+           
             [self loadWebURl];
         }
             break;
-        case 2:
+            
+            break; case 2:
         {
-            self->_jgName = @"rlxn";
+             _page = 2;
+            if ([self.table isEqualToString:@"kpiTable"]) {
+                self->_jgName = @"rlcbtab";
+            }else{
+                
+                self->_jgName = @"rlcbbt";
+            }
+           
             [self loadWebURl];
         }
             break; case 3:
         {
-            self->_jgName = @"cbjg";
+             _page = 3;
+            if ([self.table isEqualToString:@"kpiTable"]) {
+                self->_jgName = @"rlxntab";
+            }else{
+                
+                self->_jgName = @"rlxnzxt";
+            }
+         
             [self loadWebURl];
         }
             break; case 4:
         {
-            self->_jgName = @"zjjg";
+             _page = 4;
+            if ([self.table isEqualToString:@"kpiTable"]) {
+                self->_jgName = @"jysjtab";
+            }else{
+                
+                self->_jgName = @"jysjzxt";
+            }
+          
             [self loadWebURl];
         }
-            break; case 5:
-        {
-            self->_jgName = @"xljg";
-            [self loadWebURl];
-        }
-            break; case 6:
-        {
-            self->_jgName = @"nljg";
-            [self loadWebURl];
-        }
-            break; case 7:
-        {
-            self->_jgName = @"sljg";
-            [self loadWebURl];
-        }
-            break; case 8:
-        {
-            self->_jgName = @"gljg";
-            [self loadWebURl];
-        }
-            break; case 9:
-        {
-            self->_jgName = @"srjg-month";
-            [self loadWebURl];
-        }
-            break; case 10:
-        {
-            self->_jgName = @"srjg-year";
-            [self loadWebURl];
-        }
-            break; case 11:
-        {
-            self->_jgName = @"xcbd";
-            [self loadWebURl];
-        }
-            break; case 12:
-        {
-            self->_jgName = @"zjbd";
-            [self loadWebURl];
-        }
+         
             break;
-            
             
         default:
             break;
     }
-    CGPoint offset = self->view.contentOffset;
-    if (button.tag>1 ) {
-        offset.x = button.tag*(SCREEN_WIDTH-60)/4 -(SCREEN_WIDTH-60)/4;
-    }else if(button.tag==1){
-        
-         offset.x = button.tag*(SCREEN_WIDTH-60)/4 -(SCREEN_WIDTH-60)/4;
-        
-    }else{
-        
-         offset.x = 0;
-    }
-
-    [UIView animateWithDuration:0.6 animations:^{
-        self->view.contentOffset = offset;
-
-    }];
+//    switch (button.tag) {
+//        case 0:
+//        {
+//            self->_jgName = @"rybz";
+//            [self loadWebURl];
+//        }
+//            break;
+//        case 1:
+//        {
+//            self->_jgName = @"rlcb";
+//            [self loadWebURl];
+//        }
+//            break;
+//
+//            break; case 2:
+//        {
+//            self->_jgName = @"rlxnys";
+//            [self loadWebURl];
+//        }
+//            break; case 3:
+//        {
+//            self->_jgName = @"rlxnlr";
+//            [self loadWebURl];
+//        }
+//            break; case 4:
+//        {
+//            self->_jgName = @"cbjg";
+//            [self loadWebURl];
+//        }
+//            break; case 5:
+//        {
+//            self->_jgName = @"zjjg";
+//            [self loadWebURl];
+//        }
+//            break; case 6:
+//        {
+//            self->_jgName = @"xljg";
+//            [self loadWebURl];
+//        }
+//            break; case 7:
+//        {
+//            self->_jgName = @"nljg";
+//            [self loadWebURl];
+//        }
+//            break; case 8:
+//        {
+//            self->_jgName = @"sljg";
+//            [self loadWebURl];
+//        }
+//            break; case 9:
+//        {
+//            self->_jgName = @"gljg";
+//            [self loadWebURl];
+//        }
+//            break; case 10:
+//        {
+//            self->_jgName = @"srjg-month";
+//            [self loadWebURl];
+//        }
+//
+//            break; case 11:
+//        {
+//            self->_jgName = @"xcbd";
+//            [self loadWebURl];
+//        }
+//            break;
+//        case 12:
+//        {
+//            self->_jgName = @"zjbd";
+//            [self loadWebURl];
+//        }
+//            break;
+//        case 13:
+//        {
+//            self->_jgName = @"rlz";
+//            [self loadWebURl];
+//        }
+//            break;
+//
+//
+//        default:
+//            break;
+//    }
+//    CGPoint offset = self->view.contentOffset;
+//    if (button.tag>1 ) {
+//        offset.x = button.tag*(SCREEN_WIDTH-60)/4 -(SCREEN_WIDTH-60)/4;
+//    }else if(button.tag==1){
+//
+//         offset.x = button.tag*(SCREEN_WIDTH-60)/4 -(SCREEN_WIDTH-60)/4;
+//
+//    }else{
+//
+//         offset.x = 0;
+//    }
+//     CGPoint offset = self->view.contentOffset;
+//     offset.x = button.tag*(SCREEN_WIDTH-60)/4 -(SCREEN_WIDTH-60)/4;
+//    [UIView animateWithDuration:0.6 animations:^{
+//        self->view.contentOffset = offset;
+//
+//    }];
     
    
     

@@ -9,6 +9,9 @@
 #import "AppDelegate.h"
 #import "MCLoginViewController.h"
 #import "JPUSHService.h"
+#import "MCWebViewController.h"
+#import "MCPhoneLoginViewController.h"
+#import "MCLoginViewController.h"
 // iOS10 注册 APNs 所需头文件
 #ifdef NSFoundationVersionNumber_iOS_9_x_Max
 #import <UserNotifications/UserNotifications.h>
@@ -19,7 +22,28 @@
 
 @implementation AppDelegate
 
-
+- (UIInterfaceOrientationMask)application:(UIApplication *)application supportedInterfaceOrientationsForWindow:(UIWindow *)window
+{
+    
+        NSString *deviceType = [UIDevice currentDevice].model;
+        
+        if([deviceType isEqualToString:@"iPhone"]) {
+            //iPhone
+            return UIInterfaceOrientationMaskPortrait;
+        }
+        else if([deviceType isEqualToString:@"iPod touch"]) {
+            //iPod Touch
+            return UIInterfaceOrientationMaskPortrait;
+        }
+        else if([deviceType isEqualToString:@"iPad"]) {
+            //iPad
+           return UIInterfaceOrientationMaskAll;
+        }
+    
+        
+    return UIInterfaceOrientationMaskAll;
+   
+}
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
     // Override point for customization after application launch.
     
@@ -87,7 +111,7 @@
     SPTabBarController *tabBarVc = [[SPTabBarController alloc]init];
   
     // 设置窗口的根控制器
-    MCLoginViewController *login = [[MCLoginViewController alloc]init];
+    MCPhoneLoginViewController *login = [[MCPhoneLoginViewController alloc]init];
     
     MCNavigationController *nv = [[MCNavigationController alloc]initWithRootViewController:login];
 
@@ -202,10 +226,12 @@ fetchCompletionHandler:
 (void (^)(UIBackgroundFetchResult))completionHandler {
     [JPUSHService handleRemoteNotification:userInfo];
    // NSLog(@"iOS7及以上系统，收到通知:%@", [self logDic:userInfo]);
-    
+      NSDictionary *dic = (NSDictionary *)userInfo;
     if ([[UIDevice currentDevice].systemVersion floatValue]<10.0 || application.applicationState>0) {
         //NSLog(@"处理");
          [[NSNotificationCenter defaultCenter] postNotificationName:@"pushList" object:nil];
+    }else{
+         [self goToMssageViewControllerWith:dic];
     }
     
     completionHandler(UIBackgroundFetchResultNewData);
@@ -265,18 +291,37 @@ didReceiveLocalNotification:(UILocalNotification *)notification {
     UNNotificationSound *sound = content.sound;  // 推送消息的声音
     NSString *subtitle = content.subtitle;  // 推送消息的副标题
     NSString *title = content.title;  // 推送消息的标题
-    
+     NSDictionary *dic = (NSDictionary *)userInfo;
     if([response.notification.request.trigger isKindOfClass:[UNPushNotificationTrigger class]]) {
         [JPUSHService handleRemoteNotification:userInfo];
        // NSLog(@"iOS10 收到远程通知:%@", [self logDic:userInfo]);
-        
+         [self goToMssageViewControllerWith:dic];
     }
     else {
+        
         // 判断为本地通知
        // NSLog(@"iOS10 收到本地通知:{\nbody:%@，\ntitle:%@,\nsubtitle:%@,\nbadge：%@，\nsound：%@，\nuserInfo：%@\n}",body,title,subtitle,badge,sound,userInfo);
     }
     
     completionHandler();  // 系统要求执行这个方法
+}
+
+- (void)goToMssageViewControllerWith:(NSDictionary*)msgDic{
+    
+    NSUserDefaults*pushJudge = [NSUserDefaults standardUserDefaults];
+    [pushJudge setObject:@"push"forKey:@"push"];
+    [pushJudge synchronize];
+   
+     NSString *pushUrl = [NSString stringWithFormat:@"%@",[msgDic objectForKey:@"url"]];
+    NSString *access_token = [Defaults objectForKey:@"access_token"];
+    NSString *uuid = [Defaults objectForKey:@"uuid"];
+    
+    NSString *urlString = [NSString stringWithFormat:@"%@?access_token=%@&uuid=%@",pushUrl,access_token,uuid];
+    
+    MCWebViewController *webViewController = [[MCWebViewController alloc]initWithUrl:[NSURL URLWithString:urlString]  titleString:@""];
+    UINavigationController * Nav = [[UINavigationController alloc]initWithRootViewController:webViewController];
+    [self.window.rootViewController presentViewController:Nav animated:YES completion:nil];
+   
 }
 #endif
 

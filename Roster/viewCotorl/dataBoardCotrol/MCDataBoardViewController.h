@@ -28,6 +28,7 @@ NS_ASSUME_NONNULL_BEGIN
     UIWebView *web;
     UIImageView *backImageView;
     UIView *webbackView;
+    UIView *lineV;
 }
 
 

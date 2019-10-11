@@ -36,7 +36,7 @@
         
         
         
-        self.arrowImageView = [[UIImageView alloc]initWithFrame:CGRectMake([[UIScreen mainScreen] bounds].size.width- 29, 26.5, 8, 15)];
+        self.arrowImageView = [[UIImageView alloc]initWithFrame:CGRectMake(SCREEN_WIDTH- 29, 26.5, 8, 15)];
         [self addSubview:self.arrowImageView];
         [self.arrowImageView  setImage:[UIImage imageNamed:@"更多"]];
         
@@ -51,6 +51,11 @@
     }
     
     return self;
+}
+- (void)setFrame:(CGRect)frame {
+    
+    
+    [super setFrame:frame];
 }
 - (void)awakeFromNib {
     [super awakeFromNib];

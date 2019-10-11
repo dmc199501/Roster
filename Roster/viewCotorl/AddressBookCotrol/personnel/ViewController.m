@@ -53,12 +53,11 @@
     [super viewDidLoad];
     self.view.backgroundColor = [UIColor whiteColor];
     
-    UIView *backView = [[UIView alloc]initWithFrame:CGRectMake(0, 0, SCREEN_WIDTH, 44)];
+    backView = [[UIView alloc]initWithFrame:CGRectMake(0, 0, SCREEN_WIDTH, 44)];
     [backView setBackgroundColor:[UIColor whiteColor]];
-    
     [backView addSubview:[self headView]];
     
-    UIButton *pushButton = [[UIButton alloc]initWithFrame:CGRectMake(19, 0, SCREEN_WIDTH-38, 44)];
+    pushButton = [[UIButton alloc]initWithFrame:CGRectMake(19, 0, SCREEN_WIDTH-38, 44)];
     [backView addSubview:pushButton];
     [pushButton addTarget:self action:@selector(pushVC) forControlEvents:UIControlEventTouchUpInside];
     
@@ -73,7 +72,7 @@
     
    
 
-    self.table = [[UITableView alloc]initWithFrame:CGRectMake(0, 0, self.view.frame.size.width, SCREEN_HEIGHT-44-20   ) style:UITableViewStyleGrouped];
+    self.table = [[UITableView alloc]initWithFrame:CGRectMake(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT-44-20   ) style:UITableViewStyleGrouped];
     self.table.delegate = self;
     self.table.dataSource = self;
     [self.table registerClass:[MCersonnelTableViewCell class] forCellReuseIdentifier:@"Cell"];
@@ -85,6 +84,52 @@
     [self getPersonnelandUUID:self.organizatinUUID];
    
     
+}
+
+// 设备支持方向
+- (UIInterfaceOrientationMask)supportedInterfaceOrientations {
+    return UIInterfaceOrientationMaskAll;
+}
+// 默认方向
+- (UIInterfaceOrientation)preferredInterfaceOrientationForPresentation {
+    return UIInterfaceOrientationPortrait; // 或者其他值 balabala~
+}
+
+// 开启自动转屏
+- (BOOL)shouldAutorotate {
+    return YES;
+}
+- (void)viewWillTransitionToSize:(CGSize)size withTransitionCoordinator:(id<UIViewControllerTransitionCoordinator>)coordinator {
+    
+    
+    if (size.width > size.height) { // 横屏
+        // 横屏布局 balabala
+        backView = [[UIView alloc]initWithFrame:CGRectMake(0, 0, SCREEN_WIDTH, 44)];
+        [backView setBackgroundColor:[UIColor whiteColor]];
+        [backView addSubview:[self headView]];
+        
+        pushButton = [[UIButton alloc]initWithFrame:CGRectMake(19, 0, SCREEN_WIDTH-38, 44)];
+        [backView addSubview:pushButton];
+        [pushButton addTarget:self action:@selector(pushVC) forControlEvents:UIControlEventTouchUpInside];
+        
+        [self.table setTableHeaderView:backView];
+        self.table.frame = CGRectMake(0, 0,SCREEN_WIDTH, SCREEN_HEIGHT-44-20);
+        [self.table reloadData];
+        
+    } else {
+        // 竖屏布局 balabala
+        backView = [[UIView alloc]initWithFrame:CGRectMake(0, 0, SCREEN_WIDTH, 44)];
+        [backView setBackgroundColor:[UIColor whiteColor]];
+        [backView addSubview:[self headView]];
+        
+        pushButton = [[UIButton alloc]initWithFrame:CGRectMake(19, 0, SCREEN_WIDTH-38, 44)];
+        [backView addSubview:pushButton];
+        [pushButton addTarget:self action:@selector(pushVC) forControlEvents:UIControlEventTouchUpInside];
+        
+         [self.table setTableHeaderView:backView];
+         self.table.frame = CGRectMake(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT-44-20);
+        [self.table reloadData];
+    }
 }
 #pragma -mark获取组织架构信息列表ting
 -(void)getPersonnelandUUID:(NSString *)uuidSting{
@@ -112,7 +157,7 @@
         
          [dic setObject:uuidSting forKey:@"uuid"];
     }
-    
+     NSLog(@"参数%@",dic);
     
     [MCHttpManager GETWithIPString:BASEURL_ROSTER urlMethod:@"/framework/getframeworkcontacts" parameters:dic success:^(id responseObject) {
         
@@ -426,17 +471,40 @@
         cell = [[MCersonnelTableViewCell alloc]initWithStyle:UITableViewCellStyleDefault reuseIdentifier:indentifier];
     }
     
-    cell.selectionStyle = UITableViewCellSelectionStyleNone;
+   
+    
+   
     if (indexPath.section == 1) {
        
+       
+        for (UIView *view in cell.subviews) {
+            
+            if ([view isKindOfClass:[UIImageView class]]) {
+                [view removeFromSuperview];
+            }
+        }
         cell.nameLabel.text = self.organizatinArray[indexPath.row][@"name"];
         cell.nameLabel.frame = CGRectMake(19, 24, [[UIScreen mainScreen] bounds].size.width - 130, 20);
         cell.lineView.frame = CGRectMake(0, 67, SCREEN_WIDTH, 1);
+        UIImageView * arrowImageView = [[UIImageView alloc]initWithFrame:CGRectMake(SCREEN_WIDTH- 29, 26.5, 8, 15)];
+        [cell addSubview:arrowImageView];
+        [arrowImageView  setImage:[UIImage imageNamed:@"更多"]];
+        
+       
+       
+        
     }else if (indexPath.section == 2) {
+        
+        UIImageView * arrowImageView = [[UIImageView alloc]initWithFrame:CGRectMake(SCREEN_WIDTH- 29, 26.5, 8, 15)];
+        [cell addSubview:arrowImageView];
+        [arrowImageView  setImage:[UIImage imageNamed:@"更多"]];
+        
         cell.nameLabel.text = self.peopleArray[indexPath.row][@"realname"];
         NSString *iconsting = [NSString stringWithFormat:@"%@",self.peopleArray[indexPath.row][@"icon"]];
+
         [cell.iconImageView setImageWithURL:[NSURL URLWithString:iconsting] placeholderImage:[UIImage imageNamed:@"默认头像"]];
-         cell.jibLabel.text = [NSString stringWithFormat:@"%@",self.peopleArray[indexPath.row][@"orgname"]];;
+
+         cell.jibLabel.text = [NSString stringWithFormat:@"%@|%@",self.peopleArray[indexPath.row][@"orgname"],self.peopleArray[indexPath.row][@"jobname"]];;
     }else {
         [cell.jibLabel removeFromSuperview];
         [cell.arrowImageView removeFromSuperview];

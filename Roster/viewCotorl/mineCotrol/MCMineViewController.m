@@ -13,6 +13,7 @@
 #import "MCSetViewController.h"
 #import "MCWebViewController.h"
 #import "XBase64WithString.h"
+#import "DownListViewController.h"
 @interface MCMineViewController ()<MCUserDelegateViewControllerDelegate>
 
 @end
@@ -26,6 +27,8 @@
         listMutableArray = [NSMutableArray array];
         [listMutableArray addObject:@[@{@"icon": @"我的-个人档案", @"title":@"个人档案"}]];
         [listMutableArray addObject:@[@{@"icon": @"我的-薪酬查询", @"title":@"薪酬查询"}]];
+        
+        [listMutableArray addObject:@[@{@"icon": @"download", @"title":@"我的下载"}]];
         [listMutableArray addObject:@[@{@"icon": @"我的-设置", @"title":@"系统设置"}]];
         
        
@@ -38,6 +41,14 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     
+   // 屏幕旋转通知
+    [[UIDevice currentDevice] beginGeneratingDeviceOrientationNotifications];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(deviceOrientationDidChange:)
+                                                 name:UIDeviceOrientationDidChangeNotification object:nil];
+
+  
+    
+  
     
     UIView *backView = [[UIView alloc]initWithFrame:CGRectMake(0, 0, SCREEN_WIDTH, 120)];
     //[backView setBackgroundColor: YELLOW_COLOER_ZZ];
@@ -89,7 +100,21 @@
     // Do any additional setup after loading the view.
 }
 
-
+//切屏重新设置frame
+- (void)deviceOrientationDidChange:(UIInterfaceOrientation)interfaceOrientation
+{
+    for (UIView *view in self.view.subviews) {
+        
+        [view removeFromSuperview];
+    }
+    [self viewDidLoad];
+}
+//移除通知
+- (void)dealloc
+{
+    [[NSNotificationCenter defaultCenter] removeObserver:self];
+    
+}
 
 #pragma -mark设置用户头像等信息
 -(void)setUserIcon{
@@ -105,8 +130,8 @@
         [iconImageView setImage:[UIImage imageNamed:@"默认头像"]];
     }
     
-    [nameLabel  setText:[NSString stringWithFormat:@"%@",userDic[@"name"]]];
-    [jobLabel  setText:[NSString stringWithFormat:@"%@",userDic[@"orgname"]]];
+    [nameLabel  setText:[NSString stringWithFormat:@"%@",userDic[@"realname"]]];
+    [jobLabel  setText:[NSString stringWithFormat:@"%@|%@",userDic[@"orgname"],userDic[@"jobname"]]];
     
     
     
@@ -136,9 +161,9 @@
     
     NSMutableDictionary *dic = [NSMutableDictionary dictionary];
     [dic setObject:UUID forKey:@"uuid"];
-    NSString *string = [NSString stringWithFormat:@"/archives/%@",UUID];
+    NSString *string = [NSString stringWithFormat:@"/adminuser/adminuser//%@",UUID];
     
-    [MCHttpManager GETWithIPString:BASEURL_USER urlMethod:string parameters:dic success:^(id responseObject) {
+    [MCHttpManager GETWithIPString:BASEURL_ROSTER urlMethod:string parameters:dic success:^(id responseObject) {
         
         NSDictionary *dicDictionary = responseObject;
         
@@ -234,7 +259,9 @@
         
         [cell.iconImageView setImage:[UIImage imageNamed:[[[listMutableArray objectAtIndex:indexPath.section]objectAtIndex:indexPath.row] objectForKey:@"icon"]]];
         [cell.titleLabel setText:[[[listMutableArray objectAtIndex:indexPath.section]objectAtIndex:indexPath.row] objectForKey:@"title"]];
-        
+        if (indexPath.section==2) {
+            cell.iconImageView.frame = CGRectMake(19, 20, 24, 19);
+        }
        
         
         
@@ -252,42 +279,60 @@
     
     if ([cell.titleLabel.text isEqualToString:@"薪酬查询"])
     {
-        
-        MCSalaryViewController *salryVC = [[MCSalaryViewController alloc]init];
-        salryVC.hidesBottomBarWhenPushed = YES;
-        [self.navigationController pushViewController:salryVC animated:YES];
-        
+        NSString *dauuid = [Defaults objectForKey:@"dauuid"];
+        NSLog(@"%@",dauuid);
+        if (!kStringIsEmpty(dauuid)) {
+           
+            MCSalaryViewController *salryVC = [[MCSalaryViewController alloc]init];
+            salryVC.hidesBottomBarWhenPushed = YES;
+            [self.navigationController pushViewController:salryVC animated:YES];
+            
+            
+        }else{
+            
+            [STTextHudTool showErrorText:@"未绑定档案信息" withSecond:2];
+        }
+       
         
         
         
     }
     if ([cell.titleLabel.text isEqualToString:@"个人档案"])
     {
-        
-        NSString * current = [NSString stringWithFormat:@"%@",[Defaults objectForKey:@"current"]];
-        NSString * endTime = [NSString stringWithFormat:@"%@",[self getCurrentTimes]];
-        NSDate* date1 =[self dateFromString:current];//登录时保存的时间
-        NSDate*date2 =[self dateFromString:endTime];//当前的时间
-        NSTimeInterval distanceBetweenDates = [date1 timeIntervalSinceDate:date2];
-        
-        double secondsInAnHour =-1;// 除以3600是把秒化成小时，除以60得到结果为相差的分钟数
-        NSInteger hoursBetweenDates = distanceBetweenDates / secondsInAnHour;
-        
-        NSString *exp_in = [NSString stringWithFormat:@"%@",EXPIRES_IN];//获取的过期值
-       
-        //-30：表示时间误差值
-        if (hoursBetweenDates >([exp_in integerValue] -300))
-        {
-            //表示token已经过期,刷新token值刷新url
-           //[self getOuth];
-            [self pushGrdnVC];
-        }
-        else
-        {
-            //表示token还可以使用
+         NSString *dauuid = [Defaults objectForKey:@"dauuid"];
+        if (!kStringIsEmpty(dauuid)) {
+           
+            NSString * current = [NSString stringWithFormat:@"%@",[Defaults objectForKey:@"current"]];
+            NSString * endTime = [NSString stringWithFormat:@"%@",[self getCurrentTimes]];
+            NSDate* date1 =[self dateFromString:current];//登录时保存的时间
+            NSDate*date2 =[self dateFromString:endTime];//当前的时间
+            NSTimeInterval distanceBetweenDates = [date1 timeIntervalSinceDate:date2];
             
-            [self pushGrdnVC];
+            double secondsInAnHour =-1;// 除以3600是把秒化成小时，除以60得到结果为相差的分钟数
+            NSInteger hoursBetweenDates = distanceBetweenDates / secondsInAnHour;
+            
+            NSString *exp_in = [NSString stringWithFormat:@"%@",EXPIRES_IN];//获取的过期值
+            
+            //-30：表示时间误差值
+            if (hoursBetweenDates >([exp_in integerValue] -300))
+            {
+                //表示token已经过期,刷新token值刷新url
+                //[self getOuth];
+                [self pushGrdnVC];
+            }
+            else
+            {
+                //表示token还可以使用
+                
+                [self pushGrdnVC];
+            }
+        }else{
+            
+            [STTextHudTool showErrorText:@"未绑定档案信息" withSecond:2];
         }
+        
+        
+      
        
         
         
@@ -303,6 +348,20 @@
         
         
     }
+    if ([cell.titleLabel.text isEqualToString:@"我的下载"])
+    {
+        
+        
+        
+        DownListViewController *setVC = [[DownListViewController alloc]init];
+        setVC.hidesBottomBarWhenPushed = YES;
+        [self.navigationController pushViewController:setVC animated:YES];
+        
+        
+        
+        
+    }
+    
     
     
     
@@ -411,7 +470,7 @@
     
     
     [super viewWillDisappear:animated];
-     [self.navigationController setNavigationBarHidden:NO animated:YES];
+     [self.navigationController setNavigationBarHidden:YES animated:YES];
 //    [self.navigationController.navigationBar setBackgroundImage:nil forBarMetrics:UIBarMetricsDefault];
 //
 //    [self.navigationController.navigationBar setShadowImage:nil];

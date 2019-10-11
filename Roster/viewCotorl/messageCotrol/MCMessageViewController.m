@@ -18,6 +18,8 @@
 #import "MCMessageListViewController.h"
 #import "MCSearchViewController.h"
 #import "JPUSHService.h"
+#import "MCSalaryViewController.h"
+#import "SPTabBarController.h"
 @interface MCMessageViewController ()<UISearchBarDelegate>
 @property(nonatomic, strong) NSString *searchStr;
 @property(nonatomic,strong)NSString *addressURL;
@@ -49,8 +51,15 @@
     [listGDMutableArray addObject:@{@"imageName":@"看板icon",@"title":@"暂无新消息",@"comefrom":@"数据看板",@"owner_name":@"暂无",@"client_code":@"sjkb",@"homePushTime":@"2000-06-10 17:57:11",@"notread":@"0"}];
     [listGDMutableArray addObject:@{@"imageName":@"工资查询icon",@"title":@"暂无新消息",@"comefrom":@"薪酬查询",@"owner_name":@"暂无",@"client_code":@"xccx",@"homePushTime":@"2000-06-10 17:57:11",@"notread":@"0"}];
     [listGDMutableArray addObject:@{@"imageName":@"审批icon",@"title":@"暂无新消息",@"comefrom":@"预算审批",@"owner_name":@"暂无",@"client_code":@"yssp",@"homePushTime":@"2000-06-10 17:57:11",@"notread":@"0"}];
-    [listGDMutableArray addObject:@{@"imageName":@"待办icon",@"title":@"暂无新消息",@"comefrom":@"提交预算",@"owner_name":@"暂无",@"client_code":@"tjys",@"homePushTime":@"2000-06-10 17:57:11",@"notread":@"0"}];
+    //[listGDMutableArray addObject:@{@"imageName":@"待办icon",@"title":@"暂无新消息",@"comefrom":@"提交预算",@"owner_name":@"暂无",@"client_code":@"tjys",@"homePushTime":@"2000-06-10 17:57:11",@"notread":@"0"}];
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(noti1) name:@"pushList" object:nil];
+    // 屏幕旋转通知
+    [[UIDevice currentDevice] beginGeneratingDeviceOrientationNotifications];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(deviceOrientationDidChange:)
+                                                 name:UIDeviceOrientationDidChangeNotification object:nil];
+
+    //
+  
     
     //添加搜索框
     UIView *searchBarView = [[UIView alloc]initWithFrame:CGRectMake(50, 0, SCREEN_WIDTH-50, 44)];
@@ -60,22 +69,52 @@
     [searchBarView addSubview:searchButton];
     [searchButton addTarget:self action:@selector(pushSearchVC) forControlEvents:UIControlEventTouchUpInside];
     
-    self.navigationItem.titleView = searchBarView;
+    //self.navigationItem.titleView = searchBarView;
     
    listTableView = [[UITableView alloc]initWithFrame:CGRectMake(0,0, self.view.frame.size.width, self.view.frame.size.height) style:UITableViewStyleGrouped];
-   [self.view addSubview:listTableView];
+   //[self.view addSubview:listTableView];
    [listTableView setBackgroundColor:[UIColor whiteColor]];
    [listTableView setBackgroundView:nil];
    [listTableView setSeparatorStyle:UITableViewCellSeparatorStyleNone];
    [listTableView setDelegate:self];
    [listTableView setDataSource:self];
- 
+    [self setBackUI];
     [self setAlias];//设置极光推送别名
     [self getUserInformation];//获取用户信息
+    [self getArchives];//获取档案信息
     [self loadMassage];//获取首页消息列表
     
 
     // Do any additional setup after loading the view.
+}
+#pragma -mark设置背景图片
+-(void)setBackUI{
+    
+    UIImageView *homeImageview = [[UIImageView alloc]initWithFrame:CGRectMake(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT)];
+    [self.view addSubview:homeImageview];
+    NSString *deviceType = [UIDevice currentDevice].model;
+    
+    if([deviceType isEqualToString:@"iPhone"]) {
+        //iPhone
+         [homeImageview setImage:[UIImage imageNamed:@"homeC"]];
+    }else{
+        //iPad
+         [homeImageview setImage:[UIImage imageNamed:@"homeCC"]];
+       
+    }
+    
+   
+    homeImageview.contentMode =  UIViewContentModeScaleAspectFill;
+}
+//切屏重新设置frame
+- (void)deviceOrientationDidChange:(UIInterfaceOrientation)interfaceOrientation
+{
+    for (UIView *view in self.view.subviews) {
+        
+        [view removeFromSuperview];
+    }
+    [self setBackUI];
+   
 }
 
 -(void)noti1{
@@ -84,6 +123,7 @@
     
 }
 - (void)dealloc {
+    [[NSNotificationCenter defaultCenter] removeObserver:self];
     [[NSNotificationCenter defaultCenter] removeObserver:self name:@"pushList" object:nil];
 }
 #pragma 设置别名成功后的回调
@@ -165,13 +205,13 @@
                 if (!(kStringIsEmpty(notreadsum))) {
                     
                     if ([notreadsum integerValue]>0) {
-                        [self.tabBarController.tabBar showBadgeOnItmIndex:0];
+                        [self.tabBarController.tabBar showBadgeOnItmIndex:1];
                     }else{
-                        [self.tabBarController.tabBar hideBadgeOnItemIndex:0];
+                        [self.tabBarController.tabBar hideBadgeOnItemIndex:1];
                     }
                 }else{
                     
-                    [self.tabBarController.tabBar hideBadgeOnItemIndex:0];
+                    [self.tabBarController.tabBar hideBadgeOnItemIndex:1];
                 }
                 
                 
@@ -306,7 +346,7 @@
     
 }
 #pragma -mark获取个人信息
--(void)getUserInformation{
+-(void)getArchives{
 
    
     
@@ -318,7 +358,7 @@
     [MCHttpManager GETWithIPString:BASEURL_USER urlMethod:string parameters:dic success:^(id responseObject) {
         
         NSDictionary *dicDictionary = responseObject;
-       
+        NSLog(@"档案%@",dicDictionary);
        
         if ([[NSString stringWithFormat:@"%@",dicDictionary[@"code"]] isEqualToString:@"0"] )
         {
@@ -328,24 +368,33 @@
             {
                 
                 
-               
+                NSDictionary *dic = array[0];
+                NSString *uuidstring =[NSString stringWithFormat:@"%@",dic[@"uuid"]];
+                if (!kStringIsEmpty(string)) {
+                    
+                    NSUserDefaults *defaults =[NSUserDefaults standardUserDefaults];
+                    [defaults setObject:uuidstring forKey:@"dauuid"];
+                    [defaults synchronize];
+                }
                 
-                NSUserDefaults *defaults =[NSUserDefaults standardUserDefaults];
-                [defaults setObject:[self removeNullFromDictionary:dicDictionary[@"content"][0]] forKey:@"info"];
-                [defaults synchronize];
+               
                 
                 
                 
             }else{
-                
-               [STTextHudTool showErrorText:@"未获取到个人档案数据"];
+                NSUserDefaults *defaults =[NSUserDefaults standardUserDefaults];
+                [defaults setObject:@"" forKey:@"dauuid"];
+                [defaults synchronize];
+               //[STTextHudTool showErrorText:@"未获取到个人档案数据"];
             }
             
             
         }else{
             
             [STTextHudTool showErrorText:dicDictionary[@"message"]];
-           
+            NSUserDefaults *defaults =[NSUserDefaults standardUserDefaults];
+            [defaults setObject:@"" forKey:@"dauuid"];
+            [defaults synchronize];
             
             
         }
@@ -371,6 +420,73 @@
     
     
    
+    
+}
+-(void)getUserInformation{
+    
+    
+    
+    NSMutableDictionary *dic = [NSMutableDictionary dictionary];
+    [dic setObject:UUID forKey:@"uuid"];
+    
+    NSString *string = [NSString stringWithFormat:@"/adminuser/adminuser/%@",UUID];
+    
+    [MCHttpManager GETWithIPString:BASEURL_ROSTER urlMethod:string parameters:dic success:^(id responseObject) {
+        
+        NSDictionary *dicDictionary = responseObject;
+        NSLog(@"操作员%@",dicDictionary);
+        
+        if ([[NSString stringWithFormat:@"%@",dicDictionary[@"code"]] isEqualToString:@"0"] )
+        {
+            NSArray *array = dicDictionary[@"content"];
+            
+            if ([dicDictionary[@"content"] isKindOfClass:[NSArray class]] && kArrayIsEmpty(array) == 0)
+            {
+                
+                
+                
+                
+                NSUserDefaults *defaults =[NSUserDefaults standardUserDefaults];
+                [defaults setObject:[self removeNullFromDictionary:dicDictionary[@"content"][0]] forKey:@"info"];
+                [defaults synchronize];
+                
+                
+                
+            }else{
+                
+                [STTextHudTool showErrorText:@"未获取到个人档案数据"];
+            }
+            
+            
+        }else{
+            
+            [STTextHudTool showErrorText:dicDictionary[@"message"]];
+            
+            
+            
+        }
+        
+        
+        
+        
+        
+        
+        
+        
+        
+    } failure:^(NSError *error) {
+        
+        
+        NSLog(@"****%@", error);
+        [STTextHudTool showErrorText:@"网络不给力!"];
+        
+        
+        
+    }];
+    
+    
+    
+    
     
 }
 - (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath;
@@ -503,14 +619,74 @@
         
         NSString *code = [NSString stringWithFormat:@"%@",dataDictionary[@"client_code"]];
         
-        MCMessageListViewController *listVC = [[MCMessageListViewController alloc]init];
-        listVC.code = code;
-        listVC.title = dataDictionary[@"comefrom"];
-        listVC.hidesBottomBarWhenPushed = YES;
-        [self.navigationController pushViewController:listVC animated:YES];
+        if ([code isEqualToString:@"yssp"]) {
+            
+            NSString *access_token = [Defaults objectForKey:@"access_token"];
+            NSString *uuid = [Defaults objectForKey:@"uuid"];
+            
+            NSString *urlString = [NSString stringWithFormat:@"http://139.9.32.247:40091/#/approval/index?access_token=%@&uuid=%@",access_token,uuid];
+            
+            MCWebViewController *webViewController = [[MCWebViewController alloc]initWithUrl:[NSURL URLWithString:urlString]  titleString:@"审批"];
+            webViewController.hidesBottomBarWhenPushed = YES;
+            [self.navigationController pushViewController:webViewController animated:YES];
+            
+            [self changgeIsRed];
+            
+        }else if([code isEqualToString:@"xccx"]){
+            
+            MCSalaryViewController *salryVC = [[MCSalaryViewController alloc]init];
+            salryVC.hidesBottomBarWhenPushed = YES;
+            [self.navigationController pushViewController:salryVC animated:YES];
+            
+            
+            
+        }else if ([code isEqualToString:@"sjkb"]){
+            
+            SPTabBarController *tabbar = [[SPTabBarController alloc]init];
+            UIWindow * window = [UIApplication sharedApplication].delegate.window;
+            window.rootViewController = tabbar;
+            [window makeKeyWindow];
+            [self.navigationController popToRootViewControllerAnimated:NO];
+            tabbar.selectedIndex = 1;
+            
+        }else{
+            
+            MCMessageListViewController *listVC = [[MCMessageListViewController alloc]init];
+            listVC.code = code;
+            listVC.title = dataDictionary[@"comefrom"];
+            listVC.hidesBottomBarWhenPushed = YES;
+            [self.navigationController pushViewController:listVC animated:YES];
+            
+        }
         
+      
         
     }
+    
+}
+- (void)changgeIsRed{
+    
+    NSMutableDictionary *sendDictionary = [NSMutableDictionary dictionary];
+    NSUserDefaults *defaults =[NSUserDefaults standardUserDefaults];
+    NSString *username = [defaults objectForKey:@"username"];
+    
+    [sendDictionary setValue:@"yssp" forKey:@"client_code"];
+    [sendDictionary setValue:username forKey:@"username"];
+    
+    
+    
+    [MCHttpManager PutWithIPString:BASEURL_ROSTER urlMethod:@"/homepush/readhomePush" parameters:sendDictionary success:^(id responseObject)
+     
+     {
+         NSLog(@"设置已读****%@", responseObject);
+         
+     } failure:^(NSError *error) {
+         
+         NSLog(@"****%@", error);
+         
+     }];
+    
+    
     
 }
 #pragma -mark 计算每个code值下的未读数
@@ -600,7 +776,7 @@
 
 - (void)VersionUpdate{
    
-    NSString *idUrlString = @"http://api.fir.im/apps/latest/5cac6756959d69409c4514ca?api_token=4a2af86ba4542084a8de891b449dfa9c";
+    NSString *idUrlString = @"http://api.fir.im/apps/latest/5cac6756959d69409c4514ca?api_token=c5336bb99c57cefedfe6d0d5297c8765";
     NSURL *requestURL = [NSURL URLWithString:idUrlString];
     NSURLRequest *request = [NSURLRequest requestWithURL:requestURL];
    

@@ -16,16 +16,17 @@
     {
         
         [self setSelectionStyle:UITableViewCellSelectionStyleNone];
+       
         // self.backgroundColor = [UIColor colorWithRed:22 / 255.0 green:23 / 255.0 blue:37/ 255.0 alpha:1];
         
-        self.titleLabel = [[UILabel alloc]initWithFrame:CGRectMake(26, 10, 200, 20)];
-        [self addSubview:self.titleLabel];
-        [self.titleLabel setTextColor:[UIColor colorWithRed:164 / 255.0 green:165 / 255.0 blue:169/ 255.0 alpha:1]];
-         [self.moneyLabel setTextAlignment:NSTextAlignmentLeft];
-        [self.titleLabel setFont:[UIFont systemFontOfSize:14]];
+//        self.titleLabel = [[UILabel alloc]initWithFrame:CGRectMake(26, 10, 200, 20)];
+//        [self addSubview:self.titleLabel];
+//        [self.titleLabel setTextColor:[UIColor colorWithRed:164 / 255.0 green:165 / 255.0 blue:169/ 255.0 alpha:1]];
+//         [self.titleLabel setTextAlignment:NSTextAlignmentLeft];
+//        [self.titleLabel setFont:[UIFont systemFontOfSize:14]];
       
-        
-        self.moneyLabel = [[UILabel alloc]initWithFrame:CGRectMake(SCREEN_WIDTH-220, 10, 200, 20)];
+      
+        self.moneyLabel = [[UILabel alloc]initWithFrame:CGRectMake(SCREEN_WIDTH-200, 10, 200, 20)];
         [self addSubview:self.moneyLabel];
         [self.moneyLabel setTextAlignment:NSTextAlignmentRight];
         [self.moneyLabel setTextColor:[UIColor colorWithRed:56 / 255.0 green:56 / 255.0 blue:56/ 255.0 alpha:1]];
@@ -38,6 +39,12 @@
     }
     
     return self;
+}
+
+- (void)setFrame:(CGRect)frame {
+   
+    
+    [super setFrame:frame];
 }
 - (void)awakeFromNib {
     [super awakeFromNib];

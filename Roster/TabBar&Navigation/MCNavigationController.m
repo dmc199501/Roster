@@ -32,7 +32,7 @@
     // (1)
     UIBarButtonItem *item = [UIBarButtonItem appearance];
     NSMutableDictionary *itemAttrs = [NSMutableDictionary dictionary];
-    itemAttrs[NSForegroundColorAttributeName] = [UIColor blackColor];
+    itemAttrs[NSForegroundColorAttributeName] = [UIColor colorWithRed:51 / 255.0 green:150 / 255.0 blue:251 / 255.0 alpha:1];
     itemAttrs[NSFontAttributeName] = [UIFont systemFontOfSize: 18];
     [item setTitleTextAttributes: itemAttrs forState: UIControlStateNormal];
     // (2)设置返回剪头的的颜色（实际上设置的是导航栏的背景颜色）

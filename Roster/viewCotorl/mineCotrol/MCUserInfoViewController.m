@@ -24,7 +24,7 @@
     if (self)
     {
         listMutableArray = [NSMutableArray array];
-        [listMutableArray addObject:@[@{@"icon": @"", @"title":@"头像"},@{@"icon": @"", @"title":@"用户名"},@{@"icon": @"", @"title":@"姓名"},@{@"icon": @"", @"title":@"性别"}]];
+        [listMutableArray addObject:@[@{@"icon": @"", @"title":@"头像"},@{@"icon": @"", @"title":@"用户名"},@{@"icon": @"", @"title":@"姓名"}]];
        sexArray = @[@"男", @"女"];
     imageMutableArray = [NSMutableArray array];
         
@@ -32,9 +32,17 @@
     }
     return  self;
 }
+- (void)viewWillAppear:(BOOL)animated {
+    
+    [super viewWillAppear:animated];
+    
+    [self.navigationController setNavigationBarHidden:NO animated:animated];
+    
+    
+}
 - (void)viewDidLoad {
     [super viewDidLoad];
-    self.navigationItem.title = @"个人档案";
+    self.navigationItem.title = @"员工信息";
     
     self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc]initWithTitle:@"保存" style:UIBarButtonItemStylePlain target:self action:@selector(submit)];
     
@@ -106,7 +114,7 @@
             [userPhotoImageView setImage:[UIImage imageNamed:@"默认头像"]];
         }
     
-    [userNameLabel  setText:[NSString stringWithFormat:@"%@",userDic[@"name"]]];
+    [userNameLabel  setText:[NSString stringWithFormat:@"%@",userDic[@"username"]]];
     [nikenameTF  setText:[NSString stringWithFormat:@"%@",userDic[@"realname"]]];
     
     NSString *sexString = [NSString stringWithFormat:@"%@",userDic[@"sex"]];
@@ -219,7 +227,7 @@
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section;
 {
-    return 4;
+    return 3;
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath;
@@ -511,7 +519,7 @@
         
        
         
-        [MCHttpManager PutWithIPString:BASEURL_USER urlMethod:@"/archives"parameters:sendDictionary success:^(id responseObject)
+        [MCHttpManager PutWithIPString:BASEURL_ROSTER urlMethod:@"/adminuser/adminuser"parameters:sendDictionary success:^(id responseObject)
          {
              
              NSDictionary *dicDictionary = responseObject;

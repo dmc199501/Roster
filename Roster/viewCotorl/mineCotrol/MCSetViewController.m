@@ -11,6 +11,7 @@
 #import "MCLoginViewController.h"
 #import "MCWebViewController.h"
 #import "MCChangePswViewController.h"
+#import "MCPhoneLoginViewController.h"
 @interface MCSetViewController ()
 @property(nonatomic,strong)NSString *addressURL;
 @end
@@ -29,6 +30,38 @@
     [listTableView setDelegate:self];
     [listTableView setDataSource:self];
     // Do any additional setup after loading the view.
+}
+
+// 设备支持方向
+- (UIInterfaceOrientationMask)supportedInterfaceOrientations {
+    return UIInterfaceOrientationMaskAll;
+}
+// 默认方向
+- (UIInterfaceOrientation)preferredInterfaceOrientationForPresentation {
+    return UIInterfaceOrientationPortrait; // 或者其他值 balabala~
+}
+
+// 开启自动转屏
+- (BOOL)shouldAutorotate {
+    return YES;
+}
+- (void)viewWillTransitionToSize:(CGSize)size withTransitionCoordinator:(id<UIViewControllerTransitionCoordinator>)coordinator {
+    
+    
+    if (size.width > size.height) { // 横屏
+        // 横屏布局 balabala
+        listTableView.frame = CGRectMake(0, 0, SCREEN_WIDTH, SCREEN_WIDTH);
+        [listTableView reloadData];
+      
+        
+        ;
+    } else {
+        // 竖屏布局 balabala
+        listTableView.frame = CGRectMake(0, 0, SCREEN_WIDTH, SCREEN_WIDTH);
+        [listTableView reloadData];
+     
+        
+    }
 }
 
 - (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath;
@@ -86,7 +119,7 @@
     {
         case 0:
         {
-            return 3;
+            return 2;
         }
             break;
         case 1:
@@ -183,9 +216,10 @@
     
     if ([cell.titleLabel.text isEqualToString:@"关于花名册"]) {
         
-        MCWebViewController *webViewController = [[MCWebViewController alloc]initWithUrl:[NSURL URLWithString:@"https://www.jianshu.com/p/62343a955f22"]  titleString:@"测试"];
-        webViewController.hidesBottomBarWhenPushed = YES;
-        [self.navigationController pushViewController:webViewController animated:YES];
+//        MCWebViewController *webViewController = [[MCWebViewController alloc]initWithUrl:[NSURL URLWithString:@"https://www.jianshu.com/p/62343a955f22"]  titleString:@"测试"];
+//        webViewController.hidesBottomBarWhenPushed = YES;
+//        [self.navigationController pushViewController:webViewController animated:YES];
+        [STTextHudTool showErrorText:@"功能暂未开放"];
     }
     
     if ([cell.titleLabel.text isEqualToString:@"修改密码"]) {
@@ -240,7 +274,7 @@
             [[NSUserDefaults standardUserDefaults] removeObjectForKey:@"info"];
            
             [[NSUserDefaults standardUserDefaults] synchronize];
-            MCLoginViewController *LoginView = [[MCLoginViewController alloc]init];
+            MCPhoneLoginViewController *LoginView = [[MCPhoneLoginViewController alloc]init];
             
             
             UIWindow *window = [[[UIApplication sharedApplication] delegate] window];  // 获得根窗口
@@ -305,11 +339,18 @@
     
 }
 }
-
+- (void)viewWillAppear:(BOOL)animated {
+    
+    [super viewWillAppear:animated];
+    
+    [self.navigationController setNavigationBarHidden:NO animated:animated];
+    
+    
+}
 #pragma -mark版本更新
 -(void)getVersion{
     
-    NSString *idUrlString = @"http://api.fir.im/apps/latest/5cac6756959d69409c4514ca?api_token=4a2af86ba4542084a8de891b449dfa9c";
+    NSString *idUrlString = @"http://api.fir.im/apps/latest/5cac6756959d69409c4514ca?api_token=c5336bb99c57cefedfe6d0d5297c8765";
     NSURL *requestURL = [NSURL URLWithString:idUrlString];
     NSURLRequest *request = [NSURLRequest requestWithURL:requestURL];
     

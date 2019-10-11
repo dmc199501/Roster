@@ -10,6 +10,7 @@
 #import "MCPassWordViewControler.h"
 #import "XBase64WithString.h"
 #import "JPUSHService.h"
+#import "MCPhoneLoginViewController.h"
 @interface MCLoginViewController ()<UINavigationControllerDelegate,UITextFieldDelegate>
 
 @property(nonatomic,strong)UITextField *IDField;
@@ -21,9 +22,13 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     
+   self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc]initWithTitle:@"手机号登录" style:UIBarButtonItemStylePlain target:self action:@selector(pushPhoneView)];
    
-   
-  
+    // 屏幕旋转通知
+    [[UIDevice currentDevice] beginGeneratingDeviceOrientationNotifications];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(deviceOrientationDidChange:)
+                                                 name:UIDeviceOrientationDidChangeNotification object:nil];
+
     
     UILabel *label = [[UILabel alloc] init];;
     if (iPhoneX) {
@@ -77,7 +82,6 @@
     _passwordField.textColor = [UIColor blackColor];
      [self.view addSubview:_passwordField];
     _passwordField.font = [UIFont systemFontOfSize:16];
-    [_passwordField becomeFirstResponder];
     _passwordField.secureTextEntry = YES;
     _passwordField.delegate = self;
     _passwordField.inputAccessoryView = self.customView;
@@ -113,6 +117,27 @@
     // Do any additional setup after loading the view.
 }
 
+-(void)pushPhoneView{
+    
+    [self.navigationController popViewControllerAnimated:YES];
+    
+    
+}
+//切屏重新设置frame
+- (void)deviceOrientationDidChange:(UIInterfaceOrientation)interfaceOrientation
+{
+    for (UIView *view in self.view.subviews) {
+        
+        [view removeFromSuperview];
+    }
+    [self viewDidLoad];
+}
+//移除通知
+- (void)dealloc
+{
+    [[NSNotificationCenter defaultCenter] removeObserver:self];
+    
+}
 
 #pragma mark-键盘关闭
 - (UIView*)customView {
@@ -186,12 +211,12 @@
     [sendDict setObject:_IDField.text forKey:@"username"];
     [sendDict setObject:_passwordField.text forKey:@"password"];
     [sendDict setObject:@"password" forKey:@"grant_type"];
-
+   
     [STTextHudTool showSuccessText:@"登录中..."];
     [MCHttpManager PostOuthWithIPString:BASEURL_OUTH urlMethod:@"/oauth2/token" parameters:sendDict outhWithString:Authorization success:^(id responseObject) {
 
          NSDictionary *dicDictionary = responseObject;
-      
+       
 
         if ([dicDictionary isKindOfClass:[dicDictionary class]]) {
 
@@ -236,7 +261,7 @@
 
     } failure:^(NSError *error) {
 
-
+        [STTextHudTool showErrorText:@"授权失败" withSecond:2];
         NSLog(@"%@",error);
 
     }];
@@ -256,7 +281,7 @@
     [MCHttpManager GETOuthWithIPString:BASEURL_OUTH urlMethod:@"/user/info" parameters:sendDict outhWithString:Authorization success:^(id responseObject) {
 
         NSDictionary *dicDictionary = responseObject;
-        
+       
 
 
             if ([dicDictionary isKindOfClass:[dicDictionary class]]) {
@@ -267,6 +292,7 @@
 
                 [defaults setObject:dicDictionary[@"uuid"] forKey:@"uuid"];
                 [defaults setObject:dicDictionary[@"username"] forKey:@"username"];
+                 [defaults setObject:dicDictionary[@"purviewArchives"] forKey:@"purviewArchives"];
 
                 [defaults synchronize];
                 
@@ -288,7 +314,7 @@
 
     } failure:^(NSError *error) {
 
-
+         [STTextHudTool showErrorText:@"授权失败" withSecond:2];
         NSLog(@"%@",error);
 
     }];
@@ -302,7 +328,7 @@
    
 //    MCPassWordViewControler *passWordVC = [[MCPassWordViewControler alloc]init];
 //    [self.navigationController pushViewController:passWordVC animated:YES];
-    
+//
     
 }
     -(void)viewWillAppear:(BOOL)animated

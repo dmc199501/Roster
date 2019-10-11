@@ -15,6 +15,9 @@
 - (void)viewDidLoad
 {
     [super viewDidLoad];
+    
+   
+    
    
 //case 0:
 //    [STTextHudTool showText:@"我是没有设置延迟的提示信息哦"];

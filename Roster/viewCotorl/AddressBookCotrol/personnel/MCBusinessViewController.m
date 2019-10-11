@@ -75,7 +75,36 @@
 
     // Do any additional setup after loading the view.
 }
+// 设备支持方向
+- (UIInterfaceOrientationMask)supportedInterfaceOrientations {
+    return UIInterfaceOrientationMaskAll;
+}
+// 默认方向
+- (UIInterfaceOrientation)preferredInterfaceOrientationForPresentation {
+    return UIInterfaceOrientationPortrait; // 或者其他值 balabala~
+}
 
+// 开启自动转屏
+- (BOOL)shouldAutorotate {
+    return YES;
+}
+- (void)viewWillTransitionToSize:(CGSize)size withTransitionCoordinator:(id<UIViewControllerTransitionCoordinator>)coordinator {
+    
+    
+    if (size.width > size.height) { // 横屏
+        // 横屏布局 balabala
+        listTableView.frame = CGRectMake(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+        [listTableView reloadData];
+        
+        
+    } else {
+        // 竖屏布局 balabala
+        listTableView.frame = CGRectMake(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+        [listTableView reloadData];
+       
+        
+    }
+}
 
 -(void)getYgData{
     
@@ -86,14 +115,14 @@
     [MCHttpManager GETWithIPString:BASEURL_ROSTER urlMethod:@"/contacts/getcontacts" parameters:dic success:^(id responseObject) {
         
         NSDictionary *dicDictionary = responseObject;
-    
+        NSLog(@"员工信息%@",dicDictionary);
        
         
         if ([[NSString stringWithFormat:@"%@",dicDictionary[@"code"]] isEqualToString:@"0"] )
         {
             NSString *iscollection = [NSString stringWithFormat:@"%@",dicDictionary[@"content"][0][@"iscollection"]];
             
-            [self setItem:iscollection];
+           // [self setItem:iscollection];
             [self setData:dicDictionary[@"content"][0]];
             
            
@@ -438,6 +467,11 @@
             {
                 [cell.titleLabel setText:[NSString stringWithFormat:@"%@",_dataDic[@"orgname"]]];
                 [cell.contentLabel setText:@"所属部门"];
+                for (UIView *view in cell.subviews) {
+                    if ([view isKindOfClass:[UIImageView class]]) {
+                        [view removeFromSuperview];
+                    }
+                }
                 UIImageView *arrowImageView = [[UIImageView alloc]initWithFrame:CGRectMake([[UIScreen mainScreen] bounds].size.width- 29, 26.5, 8, 15)];
                 [cell addSubview:arrowImageView];
                 [arrowImageView  setImage:[UIImage imageNamed:@"更多"]];
@@ -451,13 +485,53 @@
        
     }else{
         
-      
+        for (UIView *view in cell.subviews) {
+            if ([view isKindOfClass:[UILabel class]]) {
+                [view removeFromSuperview];
+            }
+        }
+        NSString *purviewArchives = [NSString stringWithFormat:@"%@", [Defaults objectForKey:@"purviewArchives"]];
         UILabel *label = [[UILabel alloc]initWithFrame:CGRectMake(0, 15, [[UIScreen mainScreen] bounds].size.width, 20)];
-        [label setTextColor:COLOR_56_COLOER];
-        [label setText:@"查看员工档案"];
         label.textAlignment  = NSTextAlignmentCenter;
         [label setFont:[UIFont systemFontOfSize:18]];
+         [label setTextColor:COLOR_56_COLOER];
         [cell addSubview:label];
+        if ([purviewArchives isEqualToString:@"1"]) {
+            NSMutableAttributedString *AttributedStr = [[NSMutableAttributedString alloc] initWithString:@"查看员工档案(有权限查看)"];
+            
+            //小数点前面的字体大小
+            [AttributedStr addAttribute:NSFontAttributeName
+                                  value:[UIFont boldSystemFontOfSize:18]
+                                  range:NSMakeRange(0, 6)];
+            
+            //小数点后面的字体大小
+            [AttributedStr addAttribute:NSFontAttributeName
+                                  value:[UIFont boldSystemFontOfSize:14]
+                                  range:NSMakeRange(6, 7)];
+            
+            [AttributedStr addAttribute:NSForegroundColorAttributeName
+                                  value:COLOR_164_COLOER
+                                  range:NSMakeRange(6, 7)];
+             label.attributedText = AttributedStr ;
+            
+        }else{
+            
+            NSMutableAttributedString *AttributedStr = [[NSMutableAttributedString alloc] initWithString:@"查看员工档案(无权限查看)"];
+            
+            //小数点前面的字体大小
+            [AttributedStr addAttribute:NSFontAttributeName
+                                  value:[UIFont boldSystemFontOfSize:18]
+                                  range:NSMakeRange(0, 6)];
+            
+            //小数点后面的字体大小
+            [AttributedStr addAttribute:NSFontAttributeName
+                                  value:[UIFont boldSystemFontOfSize:14]
+                                  range:NSMakeRange(6, 7)];
+            label.attributedText = AttributedStr ;
+             [label setTextColor:COLOR_164_COLOER];
+        }
+        
+       
     }
     
     
@@ -521,29 +595,37 @@
         
     }else if (indexPath.section == 2){
         
-        
-        NSString * current = [NSString stringWithFormat:@"%@",[Defaults objectForKey:@"current"]];
-        NSString * endTime = [NSString stringWithFormat:@"%@",[self getCurrentTimes]];
-        NSDate* date1 =[self dateFromString:current];//登录时保存的时间
-        NSDate*date2 =[self dateFromString:endTime];//当前的时间
-        NSTimeInterval distanceBetweenDates = [date1 timeIntervalSinceDate:date2];
-        
-        double secondsInAnHour =-1;// 除以3600是把秒化成小时，除以60得到结果为相差的分钟数
-        NSInteger hoursBetweenDates = distanceBetweenDates / secondsInAnHour;
-        
-        NSString *exp_in = [NSString stringWithFormat:@"%@",EXPIRES_IN];//获取的过期值
-        //-30：表示时间误差值
-        if (hoursBetweenDates >([exp_in integerValue] -300))
-        {
-            //表示token已经过期,刷新token值刷新url
-           // [self getOuth];
-             [self pushGrdnVC];
+        NSString *purviewArchives = [NSString stringWithFormat:@"%@", [Defaults objectForKey:@"purviewArchives"]];
+        if ([purviewArchives isEqualToString:@"1"]) {
+            
+            NSString * current = [NSString stringWithFormat:@"%@",[Defaults objectForKey:@"current"]];
+            NSString * endTime = [NSString stringWithFormat:@"%@",[self getCurrentTimes]];
+            NSDate* date1 =[self dateFromString:current];//登录时保存的时间
+            NSDate*date2 =[self dateFromString:endTime];//当前的时间
+            NSTimeInterval distanceBetweenDates = [date1 timeIntervalSinceDate:date2];
+            
+            double secondsInAnHour =-1;// 除以3600是把秒化成小时，除以60得到结果为相差的分钟数
+            NSInteger hoursBetweenDates = distanceBetweenDates / secondsInAnHour;
+            
+            NSString *exp_in = [NSString stringWithFormat:@"%@",EXPIRES_IN];//获取的过期值
+            //-30：表示时间误差值
+            if (hoursBetweenDates >([exp_in integerValue] -300))
+            {
+                //表示token已经过期,刷新token值刷新url
+                // [self getOuth];
+                [self pushGrdnVC];
+            }
+            else
+            {
+                //表示token还可以使用
+                [self pushGrdnVC];
+            }
+        }else{
+            
+            
         }
-        else
-        {
-            //表示token还可以使用
-            [self pushGrdnVC];
-        }
+        
+      
         
         
     }
@@ -556,7 +638,7 @@
     NSString *uuid = _dataDic[@"uuid"];
     
     NSString *urlString = [NSString stringWithFormat:@"http://139.9.32.247:40091/#/record/record?access_token=%@&uuid=%@",access_token,uuid];
-   
+    NSLog(@"跳转的UT了===%@",urlString);
     MCWebViewController *webViewController = [[MCWebViewController alloc]initWithUrl:[NSURL URLWithString:urlString]  titleString:@"个人档案"];
     webViewController.hidesBottomBarWhenPushed = YES;
     [self.navigationController pushViewController:webViewController animated:YES];

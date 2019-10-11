@@ -14,7 +14,7 @@
 #import "MCAddressBookViewController.h"
 #import "MCServiceViewController.h"
 #import "MCMineViewController.h"
-
+#import "MCRWViewController.h"
 @interface SPTabBarController ()
 
 @end
@@ -67,7 +67,10 @@
 {
    
     MCMessageViewController *messageVC = [[MCMessageViewController alloc] init];
-    [self setUpOneChildViewController:messageVC image:[UIImage imageNamed:@"icon-首页"] selectedImage:[UIImage imageWithOriginalName:@"icon-首页-active"] title:@"消息"];
+    [self setUpOneChildViewController:messageVC image:[UIImage imageNamed:@"icon-首页"] selectedImage:[UIImage imageWithOriginalName:@"icon-首页-active"] title:@"首页"];
+    
+    MCRWViewController *rwVC = [[MCRWViewController alloc] init];
+    [self setUpOneChildViewController:rwVC image:[UIImage imageNamed:@"审批two"] selectedImage:[UIImage imageWithOriginalName:@"审批-fill"] title:@"任务"];
     
     MCDataBoardViewController *dataVC = [[MCDataBoardViewController alloc]init];
     [self setUpOneChildViewController:dataVC image:[UIImage imageNamed:@"icon-看板"] selectedImage:[UIImage imageWithOriginalName:@"icon-看板-active"] title:@"看板"];

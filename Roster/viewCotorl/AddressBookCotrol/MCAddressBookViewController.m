@@ -47,7 +47,11 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     
-    
+    // 屏幕旋转通知
+    [[UIDevice currentDevice] beginGeneratingDeviceOrientationNotifications];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(deviceOrientationDidChange:)
+                                                 name:UIDeviceOrientationDidChangeNotification object:nil];
+
     
     self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc]initWithTitle:@"通讯录" style:UIBarButtonItemStylePlain target:self action:nil];
     
@@ -77,6 +81,22 @@
     [self getContacts];
     // Do any additional setup after loading the view.
 }
+
+//切屏重新设置frame
+- (void)deviceOrientationDidChange:(UIInterfaceOrientation)interfaceOrientation
+{
+    for (UIView *view in self.view.subviews) {
+        
+        [view removeFromSuperview];
+    }
+    [self viewDidLoad];
+}
+//移除通知
+- (void)dealloc
+{
+    [[NSNotificationCenter defaultCenter] removeObserver:self];
+    
+}
 #pragma -mark跳转搜索界面
 -(void)pushSearch{
   
@@ -89,22 +109,36 @@
 }
 #pragma -mark获取常用联系人列表数据
 -(void)getContacts{
-    [self->webbackView removeFromSuperview];
-    NSMutableDictionary *dic = [NSMutableDictionary dictionary];
-    [dic setObject:UUID forKey:@"adminid"];//本人id
-    [dic setObject:@"1" forKey:@"iscollection"];//是否查收藏过得联系人1是0否
+    NSDictionary *dic2 = [Defaults objectForKey:@"info"];
     
-    [MCHttpManager GETWithIPString:BASEURL_ROSTER urlMethod:@"/contacts" parameters:dic success:^(id responseObject) {
+    NSString *orgString = [NSString stringWithFormat:@"%@",dic2[@"departmentUuid"]];
+     NSMutableDictionary *dic = [NSMutableDictionary dictionary];
+    if (!kStringIsEmpty(orgString)) {
+        
+       
+        [dic setObject:UUID forKey:@"adminid"];//本人id
+        [dic setObject:orgString forKey:@"uuid"];
+    }else{
+        
+        NSString *orguuidString = [NSString stringWithFormat:@"%@",dic2[@"orguuid"]];
+        [dic setObject:UUID forKey:@"adminid"];//本人id
+        [dic setObject:orguuidString forKey:@"uuid"];
+    }
+    
+    
+//    [dic setObject:@"1" forKey:@"iscollection"];//是否查收藏过得联系人1是0否
+    
+    [MCHttpManager GETWithIPString:BASEURL_ROSTER urlMethod:@"/framework/getframeworkcontacts" parameters:dic success:^(id responseObject) {
 
         NSDictionary *dicDictionary = responseObject;
        
-        NSLog(@"联系人%@",dicDictionary);
+//        NSLog(@"联系人%@",dicDictionary);
        
         if ([[NSString stringWithFormat:@"%@",dicDictionary[@"code"]] isEqualToString:@"0"] )
         {
-            NSArray *array = dicDictionary[@"content"][@"data"];
+            NSArray *array = dicDictionary[@"content"][@"userdata"];
             
-            if ([dicDictionary[@"content"][@"data"] isKindOfClass:[NSArray class]] && kArrayIsEmpty(array) == 0)
+            if ([dicDictionary[@"content"][@"userdata"] isKindOfClass:[NSArray class]] && kArrayIsEmpty(array) == 0)
             {
                 
                 
@@ -153,7 +187,7 @@
     
     
     [super viewDidAppear:YES];
-    [self getContacts];
+   // [self getContacts];
 }
 - (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath;
 {
@@ -190,7 +224,7 @@
         [headerView addSubview:lineView];
         
         UILabel *titleLabel = [[UILabel alloc]initWithFrame:CGRectMake(19, 20, 100, 20)];
-        titleLabel.text = @"常用联系人";
+        titleLabel.text = @"部门联系人";
         titleLabel.textColor = COLOR_56_COLOER;
         [titleLabel setFont:[UIFont systemFontOfSize:14]];
         titleLabel.textAlignment = NSTextAlignmentLeft;
@@ -224,7 +258,7 @@
             [backImageView setImage:[UIImage imageNamed:@"路径 29.png"]];
             
             UILabel *titleLabel = [[UILabel alloc]initWithFrame:CGRectMake((SCREEN_WIDTH-200)/2, 140, 200, 20)];
-            titleLabel.text = @"您还没有添加常用联系人";
+            titleLabel.text = @"暂无数据";
             titleLabel.textAlignment = NSTextAlignmentCenter;
             titleLabel.textColor = COLOR_164_COLOER;
             titleLabel.font = [UIFont systemFontOfSize:14];
@@ -388,7 +422,7 @@
         NSString *iconString = [NSString stringWithFormat:@"%@",dataDictionary[@"Icon"]];
         [cell.iconImageView setImageWithURL:[NSURL URLWithString:iconString] placeholderImage:[UIImage imageNamed:@"默认头像"]];
         [cell.nameLabel setText:[NSString stringWithFormat:@"%@",dataDictionary[@"realname"]]];
-        [cell.jibLabel setText:[NSString stringWithFormat:@"%@",dataDictionary[@"orgname"]]];
+        [cell.jibLabel setText:[NSString stringWithFormat:@"%@|%@",dataDictionary[@"orgname"],dataDictionary[@"jobname"]]];
         
        
         return cell;
@@ -422,11 +456,19 @@
             {
                 NSDictionary *dic = [Defaults objectForKey:@"info"];
                 NSString *titileString = [NSString stringWithFormat:@"%@",dic[@"orgname"]];
-                NSString *orgString = [NSString stringWithFormat:@"%@",dic[@"orguuid"]];
+                NSString *orgString = [NSString stringWithFormat:@"%@",dic[@"departmentUuid"]];
+                
                 ViewController *VC = [[ViewController alloc]init];
                 VC.hidesBottomBarWhenPushed = YES;
                 VC.isHomePage = YES;
-                VC.pushOrgid = orgString;
+                if (!kStringIsEmpty(orgString)) {
+                     VC.pushOrgid = orgString;
+                }else{
+                      NSString *orguuidString = [NSString stringWithFormat:@"%@",dic[@"orguuid"]];
+                    VC.pushOrgid = orguuidString;
+                    
+                }
+               
                 VC.title = titileString;
                 [[DingDingHeader shareHelper].titleList removeAllObjects];
                 [[DingDingHeader shareHelper].titleList addObject:@"通讯录"];
@@ -462,7 +504,7 @@
 #pragma -mark是否修改了收藏代理方法
 -(void)delegateViewControllerDidClickiscollection:(NSString *)string{
     
-    [self getContacts];
+    //[self getContacts];
     
     
 }
