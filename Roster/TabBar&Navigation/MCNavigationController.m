@@ -49,7 +49,7 @@
     
     if (self.childViewControllers.count) {
         //viewController.hidesBottomBarWhenPushed = YES; //表示push到下一个页面的时候隐藏标签栏
-        
+        //修改
         UIBarButtonItem *left = [[UIBarButtonItem alloc]initWithImage:[UIImage imageNamed:@"左箭头"]  style:UIBarButtonItemStylePlain target:self action:@selector(popCurrentViewController)];
         
         viewController.navigationItem.leftBarButtonItem = left;
